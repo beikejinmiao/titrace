@@ -1,0 +1,3 @@
+# 超时时间，单位秒
+timeout: 5  # seconds
+

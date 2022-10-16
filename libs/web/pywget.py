@@ -8,10 +8,11 @@ __version__ = "1.0"
 
 import os
 import requests
-from requests import HTTPError
 from urllib.parse import urlparse
 from http.client import responses
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from requests import HTTPError
+from requests.exceptions import ConnectionError, ReadTimeout
+from requests.packages.urllib3.exceptions import InsecureRequestWarning, ReadTimeoutError
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -89,7 +90,8 @@ def filename_fix_existed(filename):
         name, ext = filename, ''
     names = [x for x in os.listdir(dirname) if x.startswith(name)]
     names = [x.rsplit('.', 1)[0] for x in names]
-    suffixes = [x.replace(name, '') for x in names]
+    # suffixes = [x.replace(name, '') for x in names]   # 纯数字文件名会出错
+    suffixes = [x[len(name):] for x in names]
     # filter suffixes that match ' (x)' pattern
     suffixes = [x[2:-1] for x in suffixes
                 if x.startswith(' (') and x.endswith(')')]
@@ -148,7 +150,8 @@ def download(url, out=None, size_limit=25165824):
     try:
         # ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
         # unable to get local issuer certificate (_ssl.c:1131)
-        with requests.get(url, stream=True, headers=http_headers, verify=False) as resp:
+        # 必须设置timeout,否则可能会永远等待导致程序挂起
+        with requests.get(url, timeout=10, stream=True, headers=http_headers, verify=False) as resp:
             # 获取远程文件名
             resp_headers = resp.headers
             remote_filename = detect_filename(url, None, resp_headers)
@@ -176,6 +179,10 @@ def download(url, out=None, size_limit=25165824):
         # urllib.error.HTTPError: HTTP Error 403: Forbidden
         return RespFileInfo(url=url, filename=remote_filename,
                             status_code=resp.status_code, desc=resp.reason)
+    except (ConnectionError, ReadTimeout, ReadTimeoutError) as e:
+        # ReadTimeout/ReadTimeoutError会导致只下载部分文件
+        return RespFileInfo(url=url, filename=remote_filename,
+                            status_code=-1, desc=repr(e))
     return RespFileInfo(url=url, filename=remote_filename, filepath=local_filepath,
                         status_code=resp.status_code, desc=resp.reason)
 
@@ -186,7 +193,7 @@ def retrieve(url):
     # http_headers['Accept-encoding'] = 'gzip, deflate'
     remote_filename = None
     try:
-        resp = requests.get(url, headers=http_headers, verify=False)
+        resp = requests.get(url, timeout=10, headers=http_headers, verify=False)
         resp.raise_for_status()
         # 获取远程文件名
         resp_headers = resp.headers
@@ -195,6 +202,9 @@ def retrieve(url):
         # urllib.error.HTTPError: HTTP Error 403: Forbidden
         return RespFileInfo(url=url, filename=remote_filename,
                             status_code=resp.status_code, desc=resp.reason)
+    except (ConnectionError, ReadTimeout, ReadTimeoutError) as e:
+        return RespFileInfo(url=url, filename=remote_filename,
+                            status_code=-1, desc=str(e))
     return RespFileInfo(url=url, filename=remote_filename,
                         text=auto_decode(resp.content, default=resp.text),
                         status_code=resp.status_code, desc=resp.reason)
@@ -202,6 +212,6 @@ def retrieve(url):
 
 if __name__ == "__main__":
     from conf.paths import DOWNLOAD_HOME
-    file_url = 'https://physics.cnu.edu.cn/pub/wlxnew/docs/2020-02/20200213161228580437.rar'
+    file_url = 'https://filters.adtidy.org/windows/filters/5.txt'
     response = download(file_url, out=DOWNLOAD_HOME)
     print(response)

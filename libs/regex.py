@@ -10,7 +10,7 @@ domain = re.compile(r"^([\w\-]{1,128}\.){1,255}[a-zA-Z]{2,16}$")
 url = re.compile(r"^(http[s]?://.*)|(([\w\-]+\.){1,10}[a-zA-Z]{2,16}(?::\d+)?[/?].*)$")
 
 # find regex
-domain_find_regex = re.compile(r"(?:[\w-]+\.)+[0-9a-zA-Z]+")
+domain_find_regex = re.compile(r"(?:\w[\w-]*\.)+[0-9a-zA-Z]+")
 url_find_regex = re.compile(r'(?:tcp|http[s]?|[t]?ftp|ssh|git|jdbc|telnet)://'
                             r'[\w\-.]+\w+(?::\d+)?'
                             r'(?:/|\?)[\w./?;&=+#%@$-]*')

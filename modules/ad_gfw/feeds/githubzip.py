@@ -16,8 +16,9 @@ __url__ = [
 
 def fetch():
     domains = set()
-    paths = download_gitzip(__url__, outdir=AD_GFW_HOME)
-    for filepath in paths:
-        for line in reader_g(filepath):
-            domains |= find_domains(line)
+    for url in __url__:
+        paths = download_gitzip(url, outdir=AD_GFW_HOME)
+        for filepath in paths:
+            for line in reader_g(filepath):
+                domains |= find_domains(line)
     return domains

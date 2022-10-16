@@ -29,7 +29,7 @@ def downloads(url, outdir=None):
             if filepath:
                 filepaths.append(filepath)
                 logger.info('>> saved to: %s' % filepath)
-            else:
+            if resp_info.status_code < 0 or resp_info.status_code >= 400:
                 logger.error('download error({code}): {url} {msg} '.format(
                     code=resp_info.status_code, url=url, msg=resp_info.desc))
         except:

@@ -130,8 +130,8 @@ class RespFileInfo(object):
     def __init__(self, url='', filename=None, filepath=None,
                  text='', status_code=-1, desc=''):
         self.url = url.strip()
-        self.filename = filename
-        self.filepath = filepath
+        self.filename = filename        # remote file name
+        self.filepath = filepath        # local file path
         self.text = text
         self.status_code = status_code
         self.desc = desc if desc else responses.get(status_code, '')
@@ -141,12 +141,21 @@ class RespFileInfo(object):
                     'status_code': self.status_code, 'desc': self.desc})
 
 
+def try_except(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            raise e
+    return wrapper
+
+
 def download(url, out=None, size_limit=25165824):
     # https://stackoverflow.com/questions/16694907/download-large-file-in-python-with-requests
     # NOTE the stream=True parameter below
     parsed = urlparse(url)
     http_headers['Referer'] = '%s://%s/' % (parsed.scheme, parsed.netloc)
-    remote_filename = None
+    info = RespFileInfo(url=url)
     try:
         # ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
         # unable to get local issuer certificate (_ssl.c:1131)
@@ -154,7 +163,7 @@ def download(url, out=None, size_limit=25165824):
         with requests.get(url, timeout=10, stream=True, headers=http_headers, verify=False) as resp:
             # 获取远程文件名
             resp_headers = resp.headers
-            remote_filename = detect_filename(url, None, resp_headers)
+            info.filename = detect_filename(url, None, resp_headers)
             #
             resp.raise_for_status()
             # 判断文件大小
@@ -162,11 +171,11 @@ def download(url, out=None, size_limit=25165824):
                 resp_headers[h.lower()] = resp_headers[h]
             content_length = int(resp_headers.get('content-length', 0))
             if content_length > size_limit:
-                return RespFileInfo(url=url, filename=remote_filename, status_code=-1,
-                                    desc='文件大小(%sM)超过最大限制(24M)' % (content_length//1048576))
+                info.desc = '文件大小(%sM)超过最大限制(24M)' % (content_length//1048576)
+                return info
             # 获取文件名和本地路径
             if out and os.path.isdir(out):
-                local_filepath = os.path.join(out, remote_filename)
+                local_filepath = os.path.join(out, info.filename)
             else:
                 local_filepath = detect_filename(url, out, resp_headers)
             if os.path.exists(local_filepath):
@@ -177,37 +186,43 @@ def download(url, out=None, size_limit=25165824):
                     f.write(chunk)
     except HTTPError:
         # urllib.error.HTTPError: HTTP Error 403: Forbidden
-        return RespFileInfo(url=url, filename=remote_filename,
-                            status_code=resp.status_code, desc=resp.reason)
+        info.status_code = resp.status_code
+        info.desc = resp.reason
+        return info
     except (ConnectionError, ReadTimeout, ReadTimeoutError) as e:
-        # ReadTimeout/ReadTimeoutError会导致只下载部分文件
-        return RespFileInfo(url=url, filename=remote_filename,
-                            status_code=-1, desc=repr(e))
-    return RespFileInfo(url=url, filename=remote_filename, filepath=local_filepath,
-                        status_code=resp.status_code, desc=resp.reason)
+        # ConnectionError/ReadTimeout/ReadTimeoutError会导致只下载部分文件
+        if os.path.exists(local_filepath):
+            info.filepath = local_filepath
+        info.desc = repr(e)
+        return info
+    except Exception as e:
+        raise e
+    info.filepath = local_filepath
+    info.status_code = resp.status_code
+    info.desc = resp.reason
+    return info
 
 
 def retrieve(url):
     parsed = urlparse(url)
     http_headers['Referer'] = '%s://%s/' % (parsed.scheme, parsed.netloc)
     # http_headers['Accept-encoding'] = 'gzip, deflate'
-    remote_filename = None
+    info = RespFileInfo(url=url)
     try:
         resp = requests.get(url, timeout=10, headers=http_headers, verify=False)
-        resp.raise_for_status()
         # 获取远程文件名
         resp_headers = resp.headers
-        remote_filename = detect_filename(url, None, resp_headers)
-    except HTTPError:
-        # urllib.error.HTTPError: HTTP Error 403: Forbidden
-        return RespFileInfo(url=url, filename=remote_filename,
-                            status_code=resp.status_code, desc=resp.reason)
+        info.filename = detect_filename(url, None, resp_headers)
     except (ConnectionError, ReadTimeout, ReadTimeoutError) as e:
-        return RespFileInfo(url=url, filename=remote_filename,
-                            status_code=-1, desc=str(e))
-    return RespFileInfo(url=url, filename=remote_filename,
-                        text=auto_decode(resp.content, default=resp.text),
-                        status_code=resp.status_code, desc=resp.reason)
+        # ConnectionError/ReadTimeout/ReadTimeoutError会导致只下载部分文件
+        info.desc = repr(e)
+        return info
+    except Exception as e:
+        raise e
+    info.status_code = resp.status_code
+    info.desc = resp.reason
+    info.text = auto_decode(resp.content, default=resp.text)
+    return info
 
 
 if __name__ == "__main__":

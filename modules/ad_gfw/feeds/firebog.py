@@ -33,12 +33,12 @@ __url__ = [
     'https://www.github.developerdan.com/hosts/lists/ads-and-tracking-extended.txt',
     'https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt',
 ]
-__name__ = "firebog"
+__info__ = "firebog"
 
 
 def fetch():
-    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __name__))
     domains = set()
+    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __info__))
     for filepath in paths:
         for line in reader_g(filepath):
             domains |= find_domains(line)

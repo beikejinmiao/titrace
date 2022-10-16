@@ -7,7 +7,7 @@ from libs.web import pywget
 __url__ = [
     'https://ppfocus.com/0/te8f690d9.html',
 ]
-__name__ = "webpage"
+__info__ = "webpage"
 
 
 def fetch():

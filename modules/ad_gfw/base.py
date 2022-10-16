@@ -24,12 +24,16 @@ def downloads(url, outdir=None):
     for url in urls:
         try:
             logger.info('downloading: %s' % url)
-            filepath = pywget.download(url, out=outdir).filepath
-            filepaths.append(filepath)
+            resp_info = pywget.download(url, out=outdir)
+            filepath = resp_info.filepath
+            if filepath:
+                filepaths.append(filepath)
+                logger.info('>> saved to: %s' % filepath)
+            else:
+                logger.error('download error({code}): {url} {msg} '.format(
+                    code=resp_info.status_code, url=url, msg=resp_info.desc))
         except:
             logger.error(traceback.format_exc())
-        else:
-            logger.info('>> saved to: %s' % filepath)
     return filepaths
 
 
@@ -40,6 +44,8 @@ def download_gitzip(url, outdir=None):
     try:
         logger.info('downloading: %s' % url)
         filepath = pywget.download(url, out=outdir).filepath             # xxxx-master.zip
+        if not filepath:
+            return filepaths   # empty
         shutil.unpack_archive(filepath, extract_dir=outdir)
         filename = os.path.basename(filepath[:-4])                              # 去除后缀
         for subfile in traverse(os.path.join(outdir, filename)):

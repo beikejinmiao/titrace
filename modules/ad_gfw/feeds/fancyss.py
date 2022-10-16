@@ -15,12 +15,12 @@ __url__ = [
     'https://raw.githubusercontent.com/hq450/fancyss/master/rules/gfwlist.conf',
     'https://raw.githubusercontent.com/hq450/fancyss/master/rules/google_china.txt',
 ]
-__name__ = "fancyss"
+__info__ = "fancyss"
 
 
 def fetch():
-    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __name__))
     domains = set()
+    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __info__))
     for filepath in paths:
         for line in reader_g(filepath):
             domains |= find_domains(line)

@@ -24,12 +24,12 @@ __url__ = [
     'https://raw.githubusercontent.com/heradhis/indonesianadblockrules/master/subscriptions/abpindo.txt',
     'https://notabug.org/latvian-list/adblock-latvian/raw/master/lists/latvian-list.txt',
 ]
-__name__ = "easylist"
+__info__ = "easylist"
 
 
 def fetch():
-    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __name__))
     domains = set()
+    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __info__))
     for filepath in paths:
         for line in reader_g(filepath):
             if re.match(r'^\s*(@@|\|\||[a-zA-Z0-9])', line):

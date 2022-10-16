@@ -26,12 +26,12 @@ __url__ = [
     'https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/gfw.txt',
     'https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/greatfire.txt',
 ]
-__name__ = "Loyalsoldier"
+__info__ = "Loyalsoldier"
 
 
 def fetch():
-    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __name__))
     domains = set()
+    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __info__))
     for filepath in paths:
         for line in reader_g(filepath):
             domains |= find_domains(line)

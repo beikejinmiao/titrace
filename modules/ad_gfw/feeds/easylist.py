@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-import os
 import re
 from libs.regex import find_domains
-from utils.filedir import reader_g
-from modules.ad_gfw.base import downloads
-from modules.ad_gfw.base import AD_GFW_HOME
+from modules.ad_gfw.base import batch_fetch
 
 
 # https://easylist.to/
@@ -27,12 +24,12 @@ __url__ = [
 __info__ = "easylist"
 
 
+def extract(text):
+    if re.match(r'^\s*(@@|\|\||[a-zA-Z0-9])', text):
+        return find_domains(text)
+    return set()
+
+
 def fetch():
-    domains = set()
-    paths = downloads(__url__, outdir=os.path.join(AD_GFW_HOME, __info__))
-    for filepath in paths:
-        for line in reader_g(filepath):
-            if re.match(r'^\s*(@@|\|\||[a-zA-Z0-9])', line):
-                domains |= find_domains(line)
-    return domains
+    return batch_fetch(__url__, dirname=__info__, extfunc=extract)
 

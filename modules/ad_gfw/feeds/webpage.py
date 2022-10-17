@@ -12,9 +12,16 @@ __info__ = "webpage"
 
 def fetch():
     domains = set()
+    failed_urls = dict()
     for url in __url__:
-        text = pywget.retrieve(url).text
-        for host in find_domains(text):
+        try:
+            info = pywget.retrieve(url)
+            if not info.success:
+                failed_urls[url] = info.desc
+        except Exception as e:
+            failed_urls[url] = repr(e)
+            continue
+        for host in find_domains(info.text):
             domains.add(host.lower())
-        return domains
+    return domains, failed_urls
 

@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 from libs.regex import find_domains
 from utils.filedir import reader_g
-from modules.ad_gfw.base import download_gitzip
+from modules.ad_gfw.base import download_zip
 from modules.ad_gfw.base import AD_GFW_HOME
 
 
@@ -16,9 +16,12 @@ __url__ = [
 
 def fetch():
     domains = set()
+    failed_urls = dict()
     for url in __url__:
-        paths = download_gitzip(url, outdir=AD_GFW_HOME)
-        for filepath in paths:
+        info, filepaths = download_zip(url, outdir=AD_GFW_HOME)
+        if not info.success:
+            failed_urls[url] = info.desc
+        for filepath in filepaths:
             for line in reader_g(filepath):
                 domains |= find_domains(line)
-    return domains
+    return domains, failed_urls

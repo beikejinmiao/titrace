@@ -25,7 +25,8 @@ __info__ = "easylist"
 
 
 def extract(text):
-    if re.match(r'^\s*(@@|\|\||[a-zA-Z0-9])', text):
+    if re.match(r'^\s*(~|@@|\|\||[a-zA-Z0-9])', text):
+        text = re.sub(r'#.*?#.*', '', text)
         return find_domains(text)
     return set()
 

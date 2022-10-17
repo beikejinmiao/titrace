@@ -10,7 +10,7 @@ domain = re.compile(r"^([\w\-]{1,128}\.){1,255}[a-zA-Z]{2,16}$")
 url = re.compile(r"^(http[s]?://.*)|(([\w\-]+\.){1,10}[a-zA-Z]{2,16}(?::\d+)?[/?].*)$")
 
 # find regex
-domain_find_regex = re.compile(r"(?:\w[\w-]*\.)+[0-9a-zA-Z]+")
+domain_find_regex = re.compile(r"_?[0-9a-zA-Z][\w-]*\.(?:[\w-]+\.)*[a-zA-Z]{2,16}$")
 url_find_regex = re.compile(r'(?:tcp|http[s]?|[t]?ftp|ssh|git|jdbc|telnet)://'
                             r'[\w\-.]+\w+(?::\d+)?'
                             r'(?:/|\?)[\w./?;&=+#%@$-]*')
@@ -69,7 +69,7 @@ def find_domains(text):
     domains = set()
     for item in domain_find_regex.findall(text):
         if tldextract.extract(item).suffix != "":
-            domains.add(item)
+            domains.add(item.lower())
     return domains
 
 

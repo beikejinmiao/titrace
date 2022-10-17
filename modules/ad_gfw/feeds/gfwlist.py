@@ -9,7 +9,7 @@ from modules.ad_gfw.base import AD_GFW_HOME
 
 
 __url__ = 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt'     # base64编码
-__info__ = "fancyss"
+__info__ = "gfwlist"
 
 
 def fetch():

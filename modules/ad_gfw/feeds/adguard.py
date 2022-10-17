@@ -19,5 +19,5 @@ def extract(text):
 
 
 def fetch():
-    return batch_fetch(__url__, dirname=__info__, extfunc=extract)
+    return batch_fetch(__url__, dirname=__info__, extfunc=extract, proxies=None)
 

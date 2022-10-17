@@ -16,13 +16,13 @@ from libs.logger import logger
 
 datenow = datetime.now().strftime('%Y%m%d')
 AD_GFW_HOME = os.path.join(DOWNLOAD_HOME, 'ad_gfw.'+datenow)
-proxies = None
+requests_proxy = None
 if configure['proxy']:
-    logger.info('proxy is enabled: %s' % proxies)
-    proxies = configure['proxies']
+    requests_proxy = configure['proxies']
+    logger.info('proxy is enabled: %s' % requests_proxy)
 
 
-def download(url, outdir=None):
+def download(url, outdir=None, proxies=requests_proxy):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     #
@@ -42,10 +42,21 @@ def download(url, outdir=None):
     return info
 
 
-def download_zip(url, outdir=None):
+def is_plain_file(filepath):
+    if html.match(filepath) or js_css.match(filepath) or coding.match(filepath):
+        return False
+    with open(filepath, 'rb') as fopen:
+        # https://pypi.org/project/python-magic/
+        mime_type = magic.from_buffer(fopen.read(2048), mime=True)
+    if not ('/' in mime_type and (mime_type.split('/', 1)[0] == 'text' or mime_type == 'application/xml')):
+        return False
+    return True
+
+
+def download_zip(url, outdir=None, proxies=requests_proxy):
     filepaths = list()
     outdir = DOWNLOAD_HOME if not outdir else outdir
-    info = download(url, outdir=outdir)      # xxxx-master.zip
+    info = download(url, outdir=outdir, proxies=proxies)      # xxxx-master.zip
     if not info.success:
         return info, filepaths       # empty
     try:
@@ -53,14 +64,8 @@ def download_zip(url, outdir=None):
         shutil.unpack_archive(info.filepath, extract_dir=outdir)
         unpack_dirname = os.path.basename(info.filepath[:-4])                              # 去除后缀
         for unpack_file in traverse(os.path.join(outdir, unpack_dirname)):
-            if html.match(unpack_file) or js_css.match(unpack_file) or coding.match(unpack_file):
-                continue
-            with open(unpack_file, 'rb') as fopen:
-                # https://pypi.org/project/python-magic/
-                mime_type = magic.from_buffer(fopen.read(2048), mime=True)
-            if not ('/' in mime_type and (mime_type.split('/', 1)[0] == 'text' or mime_type == 'application/xml')):
-                continue
-            filepaths.append(unpack_file)
+            if is_plain_file(unpack_file):
+                filepaths.append(unpack_file)
     except Exception as e:
         logger.error(traceback.format_exc())
         info.success = False
@@ -68,12 +73,12 @@ def download_zip(url, outdir=None):
     return info, filepaths
 
 
-def batch_fetch(urls, dirname='tmp', extfunc=find_domains):
+def batch_fetch(urls, dirname='tmp', extfunc=find_domains, proxies=requests_proxy):
     domains = set()
     failed_urls = dict()
     outdir = os.path.join(AD_GFW_HOME, dirname)
     for url in urls:
-        info = download(url, outdir=outdir)
+        info = download(url, outdir=outdir, proxies=proxies)
         if info.filepath:
             for line in reader_g(info.filepath):
                 domains |= extfunc(line)

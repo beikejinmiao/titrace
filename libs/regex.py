@@ -15,7 +15,8 @@ url_find_regex = re.compile(r'(?:tcp|http[s]?|[t]?ftp|ssh|git|jdbc|telnet)://'
                             r'[\w\-.]+\w+(?::\d+)?'
                             r'(?:/|\?)[\w./?;&=+#%@$-]*')
 
-plain_text = re.compile(r".*\.(txt|json|md|log|xml|yml|yaml|conf|ini)$", re.I)
+plain_text = re.compile(r".*\.(txt|json|md|log|xml|yml|yaml|conf|ini|sql)$", re.I)
+coding = re.compile(r".*\.(py|java|php|sh|pl|cgi|kt|c|h|cpp|hpp|cs)$", re.I)
 doc = re.compile(r".*\.("
                  r"doc|docx|docm|dot|dotx|dotm|rtf|"
                  r"csv|xls|xlsx|xlsm|xlt|xltx|xltm|"

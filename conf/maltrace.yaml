@@ -2,9 +2,9 @@
 timeout: 5  # seconds
 
 # 代理
-proxy: false
+proxy: true
 proxies:
-  http: http://locahost:7890
-  https: http://locahost:7890
+  http: http://localhost:7890
+  https: http://localhost:7890
 
 

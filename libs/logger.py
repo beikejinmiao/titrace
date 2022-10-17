@@ -31,7 +31,7 @@ LOGGING_CONFIG = {
             "level": "DEBUG",
             "formatter": "default",
             "filename": LOG_FILEPATH,
-            "mode": "w+",
+            "mode": "a+",
             "encoding": "utf-8"
         }
     },

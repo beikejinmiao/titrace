@@ -7,12 +7,13 @@ Thanks: http://pypi.python.org/pypi/wget/
 __version__ = "1.0"
 
 import os
+import socket
 import requests
 from urllib.parse import urlparse
 from http.client import responses
 from requests import HTTPError
-from requests.exceptions import ConnectionError, ReadTimeout
-from requests.packages.urllib3.exceptions import InsecureRequestWarning, ReadTimeoutError
+from requests.exceptions import ConnectionError, ReadTimeout, ProxyError
+from requests.packages.urllib3.exceptions import InsecureRequestWarning, ReadTimeoutError, MaxRetryError
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -150,17 +151,18 @@ def try_except(func):
     return wrapper
 
 
-def download(url, out=None, size_limit=25165824):
+def download(url, out=None, size_limit=25165824, proxies=None):
     # https://stackoverflow.com/questions/16694907/download-large-file-in-python-with-requests
     # NOTE the stream=True parameter below
     parsed = urlparse(url)
     http_headers['Referer'] = '%s://%s/' % (parsed.scheme, parsed.netloc)
     info = RespFileInfo(url=url)
+    local_filepath = None
     try:
         # ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
         # unable to get local issuer certificate (_ssl.c:1131)
         # 必须设置timeout,否则可能会永远等待导致程序挂起
-        with requests.get(url, timeout=10, stream=True, headers=http_headers, verify=False) as resp:
+        with requests.get(url, timeout=10, stream=True, headers=http_headers, verify=False, proxies=proxies) as resp:
             # 获取远程文件名
             resp_headers = resp.headers
             info.filename = detect_filename(url, None, resp_headers)
@@ -189,9 +191,9 @@ def download(url, out=None, size_limit=25165824):
         info.status_code = resp.status_code
         info.desc = resp.reason
         return info
-    except (ConnectionError, ReadTimeout, ReadTimeoutError) as e:
+    except (socket.timeout, ConnectionError, ReadTimeout, ReadTimeoutError, MaxRetryError, ProxyError) as e:
         # ConnectionError/ReadTimeout/ReadTimeoutError会导致只下载部分文件
-        if os.path.exists(local_filepath):
+        if local_filepath and os.path.exists(local_filepath):
             info.filepath = local_filepath
         info.desc = repr(e)
         return info
@@ -203,17 +205,17 @@ def download(url, out=None, size_limit=25165824):
     return info
 
 
-def retrieve(url):
+def retrieve(url, proxies=None):
     parsed = urlparse(url)
     http_headers['Referer'] = '%s://%s/' % (parsed.scheme, parsed.netloc)
     # http_headers['Accept-encoding'] = 'gzip, deflate'
     info = RespFileInfo(url=url)
     try:
-        resp = requests.get(url, timeout=10, headers=http_headers, verify=False)
+        resp = requests.get(url, timeout=10, headers=http_headers, verify=False, proxies=proxies)
         # 获取远程文件名
         resp_headers = resp.headers
         info.filename = detect_filename(url, None, resp_headers)
-    except (ConnectionError, ReadTimeout, ReadTimeoutError) as e:
+    except (socket.timeout, ConnectionError, ReadTimeout, ReadTimeoutError, MaxRetryError, ProxyError) as e:
         # ConnectionError/ReadTimeout/ReadTimeoutError会导致只下载部分文件
         info.desc = repr(e)
         return info

@@ -1,3 +1,10 @@
 # 超时时间，单位秒
 timeout: 5  # seconds
 
+# 代理
+proxy: false
+proxies:
+  http: http://locahost:7890
+  https: http://locahost:7890
+
+

@@ -129,13 +129,14 @@ http_headers = {
 
 class RespFileInfo(object):
     def __init__(self, url='', filename=None, filepath=None,
-                 text='', status_code=-1, desc=''):
+                 text='', status_code=-1, desc='', success=False):
         self.url = url.strip()
         self.filename = filename        # remote file name
         self.filepath = filepath        # local file path
         self.text = text
         self.status_code = status_code
         self.desc = desc if desc else responses.get(status_code, '')
+        self.success = success
 
     def __str__(self):
         return str({'url': self.url, 'filename': self.filename, 'filepath': self.filepath,
@@ -193,8 +194,7 @@ def download(url, out=None, size_limit=25165824, proxies=None):
         return info
     except (socket.timeout, ConnectionError, ReadTimeout, ReadTimeoutError, MaxRetryError, ProxyError) as e:
         # ConnectionError/ReadTimeout/ReadTimeoutError会导致只下载部分文件
-        if local_filepath and os.path.exists(local_filepath):
-            info.filepath = local_filepath
+        info.filepath = local_filepath if local_filepath and os.path.exists(local_filepath) else None
         info.desc = repr(e)
         return info
     except Exception as e:
@@ -202,6 +202,7 @@ def download(url, out=None, size_limit=25165824, proxies=None):
     info.filepath = local_filepath
     info.status_code = resp.status_code
     info.desc = resp.reason
+    info.success = True
     return info
 
 
@@ -224,6 +225,7 @@ def retrieve(url, proxies=None):
     info.status_code = resp.status_code
     info.desc = resp.reason
     info.text = auto_decode(resp.content, default=resp.text)
+    info.success = True if 0 <= info.status_code < 400 else False
     return info
 
 

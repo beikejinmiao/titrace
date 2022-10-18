@@ -36,11 +36,11 @@ def urlsite(url):
 def urlfile(url):
     if url.endswith('/'):
         return ''
-    url = urlparse(url).path    # 移除URL参数
-    if html.match(url) or common_dom.match(url):
+    url_path = urlparse(url).path    # 移除URL参数
+    if html.match(url_path) or common_dom.match(url_path):
         return ''
-    if re.match(r'.+\.\w{2,5}$', url) and not re.match(r'.+\.[\d_]+$', url):
-        return os.path.basename(url)
+    if re.match(r'.+\.\w{2,5}$', url_path) and not re.match(r'.+\.[\d_]+$', url_path):
+        return os.path.basename(url_path)
     return ''
 
 
@@ -64,10 +64,17 @@ def absurl(url, site=None):
     if not url_path.startswith('/'):
         url_path = '/' + url_path
     while '/../' in url_path:
-        url_path = re.sub(r'(^|/[^/]+)/\.\./', '/', url_path)
+        # url_path = re.sub(r'(^|/[^/]+)/\.\./', '/', url_path)     # 死循环: 'http://www.cas.cn//www.cas.cn/../../lx/'
+        _url_path = re.sub(r'(/[^/]*)/\.\./', '/', url_path)
+        if _url_path == url_path:
+            break
+        url_path = _url_path
+
     url_path = re.sub(r'/{2,}', '/', url_path)      # ////////url/path?a=1   -->   /url/path?a=1
     return '{host}{connector}{path}'.format(host=host,
                                             connector='' if url_path.startswith('/') else '/',
                                             path=url_path)
 
 
+if __name__ == '__main__':
+    print(absurl('http://www.cas.cn//www.cas.cn/../../lx/'))

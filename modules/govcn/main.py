@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-import threading
 from queue import Queue
 from urllib.parse import urlparse
 from libs.regex import is_gov_edu
 from libs.web.url import urlfile
 from libs.web.page import page_href, page_title
+from libs.wrapper import threaded
 from libs.logger import logger
 
 
@@ -17,21 +17,9 @@ class CrawlManager(object):
 
         self.threads = list()
         self.urls = dict()  # key: url, value: 该url的title
-        self.queue = Queue(100000)
+        self.queue = Queue(500000)
 
-    def _depth(self, url, depth=1):
-        parts = urlparse(url)
-        homepage1 = "{0.scheme}://{0.netloc}".format(parts)
-        homepage = homepage1 + '/'
-        is_homepage = homepage == url or homepage1 == url
-        if is_gov_edu(parts.netloc):
-            if is_homepage:
-                return self.max_gov_depth
-            # depth只用于控制政企网站访问深度,普通网站默认只爬取1层
-            return depth
-        # 政府&学校网站主页可向下爬取多层,其余只爬取1层后结束
-        return 1
-
+    @threaded(daemon=True, start=False)
     def crawl(self):
         while True:
             url, depth = self.queue.get(block=True)
@@ -60,7 +48,7 @@ class CrawlManager(object):
     def start(self):
         self.urls[self._start_url] = page_title(self._start_url)
         for i in range(self.n_thread):
-            self.threads.append(threading.Thread(target=self.crawl))
+            self.threads.append(self.crawl())
         self.queue.put((self._start_url, self.max_gov_depth))
         for thread in self.threads:
             thread.start()

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-from queue import Queue
+import time
+from collections import deque
 from urllib.parse import urlparse
 from libs.regex import is_gov_edu
 from libs.web.url import urlfile
@@ -17,12 +18,22 @@ class CrawlManager(object):
 
         self.threads = list()
         self.urls = dict()  # key: url, value: 该url的title
-        self.queue = Queue(500000)
+        self.queue = deque()        # deque线程安全
+        self._wait_second = 1       # seconds
 
     @threaded(daemon=True, start=False)
     def crawl(self):
-        while True:
-            url, depth = self.queue.get(block=True)
+        wait_time = 0
+        # 持续等待1小时后,没有新URL出现,退出
+        while wait_time <= 3600:
+            try:
+                url, depth = self.queue.popleft()
+            except IndexError:  # deque is empty
+                wait_time += self._wait_second
+                time.sleep(self._wait_second)
+                continue
+            wait_time = 0   # 置零
+            #
             logger.info('crawl url: %s %s' % (url, self.urls[url]))
             urls_title = page_href(url)
             for _url_, title in urls_title.items():
@@ -43,13 +54,13 @@ class CrawlManager(object):
                 else:
                     # 普通网站只爬取1层后结束
                     _depth_ = 1
-                self.queue.put((_url_, _depth_-1))
+                self.queue.append((_url_, _depth_-1))       # 未限制queue大小,可能会造成OOM问题
 
     def start(self):
         self.urls[self._start_url] = page_title(self._start_url)
         for i in range(self.n_thread):
             self.threads.append(self.crawl())
-        self.queue.put((self._start_url, self.max_gov_depth))
+        self.queue.append((self._start_url, self.max_gov_depth))
         for thread in self.threads:
             thread.start()
         for thread in self.threads:

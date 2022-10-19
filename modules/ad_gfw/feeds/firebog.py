@@ -28,7 +28,7 @@ __url__ = [
     'https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt',
     'https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext',
     'https://www.github.developerdan.com/hosts/lists/ads-and-tracking-extended.txt',
-    'https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt',
+    # 'https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt',
 ]
 __info__ = "firebog"
 

@@ -152,7 +152,7 @@ def try_except(func):
     return wrapper
 
 
-def download(url, out=None, size_limit=25165824, proxies=None):
+def download(url, out=None, size_limit=104857600, proxies=None):
     # https://stackoverflow.com/questions/16694907/download-large-file-in-python-with-requests
     # NOTE the stream=True parameter below
     parsed = urlparse(url)
@@ -174,7 +174,7 @@ def download(url, out=None, size_limit=25165824, proxies=None):
                 resp_headers[h.lower()] = resp_headers[h]
             content_length = int(resp_headers.get('content-length', 0))
             if content_length > size_limit:
-                info.desc = '文件大小(%sM)超过最大限制(24M)' % (content_length//1048576)
+                info.desc = '文件大小(%sM)超过最大限制(100M)' % (content_length//1048576)
                 return info
             # 获取文件名和本地路径
             if out and os.path.isdir(out):

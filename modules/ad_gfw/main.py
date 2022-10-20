@@ -3,17 +3,16 @@
 import os
 import shutil
 import concurrent.futures
-from conf.paths import PRIVATE_RESOURCE_HOME
 from libs.construct import importc
 from utils.filedir import traverse, writer, dump_json
-from modules.ad_gfw.base import DOWNLOAD_HOME, AD_GFW_HOME, datenow
+from modules.ad_gfw.base import MOD_DOWNLOAD_HOME, MOD_RESOURCE_HOME, datenow
 from libs.logger import logger
 
 
 def clear():
-    if os.path.exists(AD_GFW_HOME):
-        shutil.rmtree(AD_GFW_HOME)
-    os.makedirs(AD_GFW_HOME)
+    if os.path.exists(MOD_DOWNLOAD_HOME):
+        shutil.rmtree(MOD_DOWNLOAD_HOME)
+    os.makedirs(MOD_DOWNLOAD_HOME)
 
 
 def fetch():
@@ -24,8 +23,8 @@ def fetch():
     failed_urls = dict()
 
     def save():
-        writer(os.path.join(PRIVATE_RESOURCE_HOME, 'ad_gfw.%s.txt' % datenow), domains)
-        dump_json(os.path.join(PRIVATE_RESOURCE_HOME, 'ad_gfw.failed_urls.%s.json' % datenow), failed_urls)
+        writer(os.path.join(MOD_RESOURCE_HOME, 'ad_gfw.%s.txt' % datenow), domains)
+        dump_json(os.path.join(MOD_RESOURCE_HOME, 'ad_gfw.failed_urls.%s.json' % datenow), failed_urls)
     #
     fetch_path = 'modules.ad_gfw.feeds.%s.fetch'
     for pyfile in traverse(
@@ -49,8 +48,8 @@ def async_fetch():
     failed_urls = dict()
 
     def save():
-        writer(os.path.join(PRIVATE_RESOURCE_HOME, 'ad_gfw.%s.txt' % datenow), domains)
-        dump_json(os.path.join(PRIVATE_RESOURCE_HOME, 'ad_gfw.failed_urls.%s.json' % datenow), failed_urls)
+        writer(os.path.join(MOD_RESOURCE_HOME, 'ad_gfw.%s.txt' % datenow), domains)
+        dump_json(os.path.join(MOD_RESOURCE_HOME, 'ad_gfw.failed_urls.%s.json' % datenow), failed_urls)
     #
     threads = list()
     fetch_path = 'modules.ad_gfw.feeds.%s.fetch'
@@ -72,9 +71,10 @@ def async_fetch():
 
 
 def check():
+    from modules.ad_gfw.base import DOWNLOAD_HOME
     from utils.filedir import reader_g
-    from modules.ad_gfw.base import is_plain_file
-    for filepath in traverse(os.path.join(DOWNLOAD_HOME, 'ad_gfw.'+'20221017')):
+    from libs.web.downloader import is_plain_file
+    for filepath in traverse(os.path.join(DOWNLOAD_HOME, 'ad_gfw', '20221017')):
         if not is_plain_file(filepath):
             continue
         target = '0.0.0www1.sedoparking.com'

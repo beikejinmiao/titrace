@@ -4,8 +4,8 @@ import os
 import base64
 from libs.regex import find_domains
 from utils.filedir import reader_g
-from modules.ad_gfw.base import download
-from modules.ad_gfw.base import AD_GFW_HOME
+from libs.web.downloader import download
+from modules.ad_gfw.base import MOD_DOWNLOAD_HOME
 
 
 __url__ = 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt'     # base64编码
@@ -15,7 +15,7 @@ __info__ = "gfwlist"
 def fetch():
     domains = set()
     failed_urls = dict()
-    info = download(__url__, outdir=os.path.join(AD_GFW_HOME, __info__))
+    info = download(__url__, outdir=os.path.join(MOD_DOWNLOAD_HOME, __info__))
     if not info.success:
         failed_urls[__url__] = info.desc
     if not info.filepath:

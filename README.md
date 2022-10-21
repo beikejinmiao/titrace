@@ -10,7 +10,7 @@
  - [adguard](https://adguard.com/en/welcome.html)
  - [easylist](https://easylist.to/)
  - [firebog](https://firebog.net/)
- - [fancyss](https://github.com/hq450/fancyss)      # 科学上网
+ - [fancyss](https://github.com/hq450/fancyss)      　# 科学上网
  - [gfwlist](https://github.com/gfwlist/gfwlist)
  - https://www.github.com/blackmatrix7/ios_rule_script
  - https://www.github.com/LM-Firefly/Rules
@@ -40,7 +40,9 @@
 下载链接：https://tranco-list.s3.amazonaws.com/top-1m.csv.zip
 
 
-### [govcn](https://github.com/beikejinmiao/maltrace/tree/main/modules/govcn/feeds)
-从可信网站([四川省政府](https://www.sc.gov.cn/))出发，递归爬取网页中的所有URL并提取域名
+### [govcn](https://github.com/beikejinmiao/maltrace/tree/main/modules/govcn)
+以可信网站([四川省政府](https://www.sc.gov.cn/))为起始页
+ - 递归爬取网页中的所有URL和对应的title　 　# 限制深度，过滤常见大站域名
+ - 提取域名和常见拼音简写 
 
 

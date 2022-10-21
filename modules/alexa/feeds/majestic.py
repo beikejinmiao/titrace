@@ -9,9 +9,9 @@ __url__ = 'http://downloads.majestic.com/majestic_million.csv'
 __info__ = 'majestic'
 
 
-def fetch():
+def fetch(outdir=None):
     domains = list()
-    info = download(__url__, outdir=os.path.join(MOD_DOWNLOAD_HOME, __info__))
+    info = download(__url__, outdir=os.path.join(MOD_DOWNLOAD_HOME, __info__) if not outdir else outdir)
     if not info.success:
         return domains    # empty
     # 数据样例

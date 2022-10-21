@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 from libs.regex import find_domains
-from modules.ad_gfw.base import batch_fetch
+from modules.ad_gfw.base import crawl
 
 
 __url__ = [
@@ -15,11 +15,8 @@ __url__ = [
 __info__ = "fancyss"
 
 
-def extract(text):
-    return find_domains(text)
+def fetch(outdir=None):
+    return crawl(__url__, outdir=__info__ if not outdir else outdir)
 
-
-def fetch():
-    return batch_fetch(__url__, dirname=__info__, extfunc=extract)
 
 

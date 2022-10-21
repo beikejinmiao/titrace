@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 from libs.regex import find_domains
-from modules.ad_gfw.base import batch_fetch
+from modules.ad_gfw.base import crawl
 
 
 __url__ = [
@@ -23,15 +23,11 @@ __url__ = [
     'https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/gfw.txt',
     'https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/greatfire.txt',
 ]
-__info__ = "Loyalsoldier"
+__info__ = "loyalsoldier"
 
 
-def extract(text):
-    return find_domains(text)
-
-
-def fetch():
-    return batch_fetch(__url__, dirname=__info__, extfunc=extract)
+def fetch(outdir=None):
+    return crawl(__url__, outdir=__info__ if not outdir else outdir)
 
 
 

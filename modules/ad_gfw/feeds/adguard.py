@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 import re
 from libs.regex import find_domains
-from modules.ad_gfw.base import batch_fetch
+from modules.ad_gfw.base import crawl
 
 
 # https://adguard.com/en/welcome.html
@@ -19,6 +19,6 @@ def extract(text):
     return set()
 
 
-def fetch():
-    return batch_fetch(__url__, dirname=__info__, extfunc=extract, proxies=None)
+def fetch(outdir=None):
+    return crawl(__url__, outdir=__info__ if not outdir else outdir, extfunc=extract, proxies=None)
 

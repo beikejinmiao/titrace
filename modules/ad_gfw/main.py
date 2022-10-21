@@ -1,91 +1,29 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-import os
-import shutil
-import concurrent.futures
-from libs.construct import importc
-from utils.filedir import traverse, writer, dump_json
-from modules.ad_gfw.base import MOD_DOWNLOAD_HOME, MOD_RESOURCE_HOME, datenow
-from libs.logger import logger
+from modules.core import AbstractFeedsManager
 
 
-def clear():
-    if os.path.exists(MOD_DOWNLOAD_HOME):
-        shutil.rmtree(MOD_DOWNLOAD_HOME)
-    os.makedirs(MOD_DOWNLOAD_HOME)
+class AdGfwFeedsManager(AbstractFeedsManager):
+    def __init__(self, date=None):
+        super().__init__('ad_gfw', date=date)
+        self.failed_urls = dict()
 
+    def runner(self):
+        results = self.fetch()
+        for _hosts_, _failed_urls_ in results:
+            for host in _hosts_:
+                self.add_host(host)
+            self.failed_urls.update(_failed_urls_)
+        #
+        self.save('%s.failed_urls.%s.json' % (self.module, self.date), self.failed_urls)
 
-def fetch():
-    # 清除旧数据
-    clear()
-    #
-    domains = set()
-    failed_urls = dict()
-
-    def save():
-        writer(os.path.join(MOD_RESOURCE_HOME, 'ad_gfw.%s.txt' % datenow), domains)
-        dump_json(os.path.join(MOD_RESOURCE_HOME, 'ad_gfw.failed_urls.%s.json' % datenow), failed_urls)
-    #
-    fetch_path = 'modules.ad_gfw.feeds.%s.fetch'
-    for pyfile in traverse(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'feeds'),
-            regex=r'^[^_].+\.py$'):
-        feed = os.path.basename(pyfile)[:-3]
-        logger.info('%s %s %s' % ('-'*30, feed, '-'*30))
-        func = importc(fetch_path % feed)      # 动态加载fetch方法
-        _domains_, _failed_urls_ = func()
-        domains |= _domains_
-        failed_urls.update(_failed_urls_)
-        save()  # 临时保存,避免程序异常终止导致损失全部数据
-    save()
-
-
-def async_fetch():
-    # 清除旧数据
-    clear()
-    #
-    domains = set()
-    failed_urls = dict()
-
-    def save():
-        writer(os.path.join(MOD_RESOURCE_HOME, 'ad_gfw.%s.txt' % datenow), domains)
-        dump_json(os.path.join(MOD_RESOURCE_HOME, 'ad_gfw.failed_urls.%s.json' % datenow), failed_urls)
-    #
-    threads = list()
-    fetch_path = 'modules.ad_gfw.feeds.%s.fetch'
-    for pyfile in traverse(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'feeds'),
-            regex=r'^[^_].+\.py$'):
-        feed = os.path.basename(pyfile)[:-3]
-        logger.info('%s %s %s' % ('-'*30, feed, '-'*30))
-        func = importc(fetch_path % feed)      # 动态加载fetch方法
-        threads.append(func)
-    # https://stackoverflow.com/questions/6893968/how-to-get-the-return-value-from-a-thread-in-python
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(method) for method in threads]
-        results = [future.result() for future in futures]
-    for _domains_, _failed_urls_ in results:
-        domains |= _domains_
-        failed_urls.update(_failed_urls_)
-    save()
-
-
-def check():
-    from modules.ad_gfw.base import DOWNLOAD_HOME
-    from utils.filedir import reader_g
-    from libs.web.downloader import is_plain_file
-    for filepath in traverse(os.path.join(DOWNLOAD_HOME, 'ad_gfw', '20221017')):
-        if not is_plain_file(filepath):
-            continue
-        target = '0.0.0www1.sedoparking.com'
-        for line in reader_g(filepath, debug=False):
+    def check(self, target):
+        for line, filepath in self.traverse():
             if target in line:
-                logger.info('"%s" in "%s"' % (target, filepath))
+                print('"%s" in "%s"' % (target, filepath))
 
 
 if __name__ == '__main__':
-    # fetch()
-    async_fetch()
-    # check()
-
+    man = AdGfwFeedsManager(date='19700101')
+    man.start()
 

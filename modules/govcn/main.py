@@ -10,7 +10,7 @@ from libs.wrapper import threaded
 from libs.logger import logger
 
 
-class CrawlManager(object):
+class WebsiteManager(object):
     def __init__(self, start_url, n_thread=10, max_gov_depth=2):
         self._start_url = start_url
         self.n_thread = n_thread
@@ -54,7 +54,8 @@ class CrawlManager(object):
                 else:
                     # 普通网站只爬取1层后结束
                     _depth_ = 1
-                self.queue.append((_url_, _depth_-1))       # 未限制queue大小,可能会造成OOM问题
+                # TODO 未限制deque大小,可能会造成OOM问题
+                self.queue.append((_url_, _depth_-1))
 
     def start(self):
         self.urls[self._start_url] = page_title(self._start_url)
@@ -68,5 +69,5 @@ class CrawlManager(object):
 
 
 if __name__ == '__main__':
-    man = CrawlManager('https://www.sc.gov.cn/')
+    man = WebsiteManager('https://www.sc.gov.cn/')
     man.start()

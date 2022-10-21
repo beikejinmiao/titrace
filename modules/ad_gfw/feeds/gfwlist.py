@@ -12,10 +12,10 @@ __url__ = 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt'
 __info__ = "gfwlist"
 
 
-def fetch():
+def fetch(outdir=None):
     domains = set()
     failed_urls = dict()
-    info = download(__url__, outdir=os.path.join(MOD_DOWNLOAD_HOME, __info__))
+    info = download(__url__, outdir=os.path.join(MOD_DOWNLOAD_HOME, __info__) if not outdir else outdir)
     if not info.success:
         failed_urls[__url__] = info.desc
     if not info.filepath:

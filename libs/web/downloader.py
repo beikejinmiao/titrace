@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 import os
+import re
 import shutil
 import magic
 import traceback
@@ -40,7 +41,7 @@ def batch_download(urls, outdir=None, proxies=requests_proxy):
     return infos
 
 
-def is_plain_file(filepath):
+def is_data_file(filepath):
     if html.match(filepath) or js_css.match(filepath) or coding.match(filepath):
         return False
     with open(filepath, 'rb') as fopen:
@@ -62,7 +63,7 @@ def download_zip(url, outdir=None, proxies=requests_proxy):
         extract_dir = os.path.join(outdir, os.path.basename(info.filepath)+'.unpack')
         shutil.unpack_archive(info.filepath, extract_dir=extract_dir)
         for unpack_file in traverse(extract_dir):
-            if is_plain_file(unpack_file):
+            if is_data_file(unpack_file):
                 unzip_files.append(unpack_file)
     except Exception as e:
         logger.error(traceback.format_exc())

@@ -3,7 +3,6 @@
 from libs.regex import find_domains
 from utils.filedir import reader_g
 from libs.web.downloader import download_zip
-from modules.ad_gfw.base import MOD_DOWNLOAD_HOME
 
 
 __url__ = [
@@ -12,13 +11,14 @@ __url__ = [
     'https://codeload.github.com/Hackl0us/SS-Rule-Snippet/zip/refs/heads/main',
     'https://codeload.github.com/ACL4SSR/ACL4SSR/zip/refs/heads/master',
 ]
+__info__ = 'githubzip'
 
 
-def fetch():
+def fetch(outdir=None):
     domains = set()
     failed_urls = dict()
     for url in __url__:
-        info, unzip_files = download_zip(url, outdir=MOD_DOWNLOAD_HOME)
+        info, unzip_files = download_zip(url, outdir=__info__ if not outdir else outdir)
         if not info.success:
             failed_urls[url] = info.desc
         for filepath in unzip_files:

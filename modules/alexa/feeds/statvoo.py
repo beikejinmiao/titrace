@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-from modules.alexa.base import base_fetch
+from modules.alexa.base import crawl
 
 __url__ = 'https://statvoo.com/dl/top-1million-sites.csv.zip'
 __info__ = 'statvoo'
 
 
-def fetch():
-    return base_fetch(__url__, dirname=__info__)
+def fetch(outdir=None):
+    return crawl(__url__, outdir=__info__ if not outdir else outdir)

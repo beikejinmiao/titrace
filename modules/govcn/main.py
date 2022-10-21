@@ -11,14 +11,14 @@ from libs.logger import logger
 
 
 class WebsiteManager(object):
-    def __init__(self, start_url, n_thread=10, max_gov_depth=2):
+    def __init__(self, start_url='https://www.sc.gov.cn/', n_thread=10, max_gov_depth=2):
         self._start_url = start_url
         self.n_thread = n_thread
         self.max_gov_depth = max(2, max_gov_depth)  # 控制政企网站爬取深度
 
         self.threads = list()
         self.urls = dict()  # key: url, value: 该url的title
-        self.queue = deque()        # deque线程安全
+        self.queue = deque()
         self._wait_second = 1       # seconds
 
     @threaded(daemon=True, start=False)
@@ -27,7 +27,7 @@ class WebsiteManager(object):
         # 持续等待1小时后,没有新URL出现,退出
         while wait_time <= 3600:
             try:
-                url, depth = self.queue.popleft()
+                url, depth = self.queue.popleft()       # deque线程安全
             except IndexError:  # deque is empty
                 wait_time += self._wait_second
                 time.sleep(self._wait_second)
@@ -69,5 +69,5 @@ class WebsiteManager(object):
 
 
 if __name__ == '__main__':
-    man = WebsiteManager('https://www.sc.gov.cn/')
+    man = WebsiteManager()
     man.start()

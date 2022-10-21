@@ -88,7 +88,7 @@ class AbstractFeedsManager(object):
         writer(path, dataset, sort=None)
         logger.info('save to %s' % path)
 
-    def save_hosts(self):
+    def _save_builtin(self):
         self.save('%s.%s.txt' % (self.module, self.date), self.domains)
         self.save('%s.host.%s.txt' % (self.module, self.date), self.hosts)
 
@@ -107,7 +107,7 @@ class AbstractFeedsManager(object):
         if refresh:
             self._init_env()
             self.runner()
-            self.save_hosts()
+            self._save_builtin()
         else:
             for host in self.traverse():
                 self.add_host(host)

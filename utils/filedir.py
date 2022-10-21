@@ -110,21 +110,23 @@ def load_json(path, encoding='utf-8'):
         return json.load(fopen)
 
 
-def dump_json(path, content, method="w", encoding='utf-8', indent=4):
+def writer(path, dataset, method="w", encoding='utf-8', sort=False, indent=4):
     safe_create_dir(os.path.dirname(path))
+    # write bytes content
+    if isinstance(dataset, bytes):
+        with open(path, 'wb') as fout:
+            fout.write(dataset)
+        return
+    #
     with open(path, method, encoding=encoding) as fout:
-        json.dump(content, fout, indent=indent)
-
-
-def writer(path, texts, method="w", encoding='utf-8', sort=False):
-    safe_create_dir(os.path.dirname(path))
-    with open(path, method, encoding=encoding) as fout:
-        if isinstance(texts, str):
-            fout.write(texts)
+        if isinstance(dataset, str):
+            fout.write(dataset)
+        elif isinstance(dataset, dict):
+            json.dump(dataset, fout, indent=indent)
         else:
             if sort is not None:
-                texts = sorted(texts, reverse=sort)
-            fout.write('\n'.join(texts))
+                dataset = sorted(dataset, reverse=sort)
+            fout.write('\n'.join(dataset))
 
 
 def merge2write(path, texts, encoding='utf-8', drop_duplicates=True, sort=False):

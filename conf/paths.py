@@ -3,7 +3,7 @@
 import os
 
 #
-WORK_NAME = 'maltrace'
+WORK_NAME = 'titrace'
 USER_HOME = os.path.expanduser('~')
 MAIN_HOME = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 CONF_HOME = os.path.join(MAIN_HOME, 'conf')

@@ -10,7 +10,8 @@ class AdGfwFeedsManager(AbstractFeedsManager):
 
     def runner(self):
         results = self.fetch()
-        for _hosts_, _failed_urls_ in results:
+        for feed, result in results.items():
+            _hosts_, _failed_urls_ = result
             for host in _hosts_:
                 self.add_host(host)
             self.failed_urls.update(_failed_urls_)

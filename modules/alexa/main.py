@@ -11,7 +11,7 @@ class AlexaFeedsManager(AbstractFeedsManager):
     def runner(self):
         results = self.fetch()
         for i in range(1000000):
-            for result in results:
+            for feed, result in results.items():
                 if i >= len(result):
                     continue
                 host = result[i]

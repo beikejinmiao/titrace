@@ -56,10 +56,11 @@ class AbstractFeedsManager(object):
         # https://stackoverflow.com/questions/6893968/how-to-get-the-return-value-from-a-thread-in-python
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = list()
-            for feed, func in self._feed_funcs.items():
+            feeds = list(self._feed_funcs.keys())
+            for feed in feeds:
                 logger.info('%s %s %s' % ('-' * 30, feed, '-' * 30))
-                futures.append(executor.submit(func, os.path.join(self.download_home, feed)))
-            results = [future.result() for future in futures]
+                futures.append(executor.submit(self._feed_funcs[feed], os.path.join(self.download_home, feed)))
+            results = dict(zip(feeds, [future.result() for future in futures]))
         return results
 
     def runner(self):

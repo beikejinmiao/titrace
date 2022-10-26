@@ -21,5 +21,5 @@ def fetch(outdir=None):
     df = pd.read_csv(info.filepath[1][0], names=['Rank', 'Domain'])
     # This list differs from traffic ranking in that it ranks by investment in websites.
     # For that reasons it more suites B2B use cases.
-    # 不是按流量排序,只取前100k个
-    return df.iloc[:100000]['Domain'].values.tolist()
+    # 不是按流量排序,且有大量疑似垃圾域名,只取前5k个
+    return df.iloc[:5000]['Domain'].values.tolist()

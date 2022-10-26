@@ -12,3 +12,4 @@ requests_proxy = None
 if configure['proxy']:
     requests_proxy = configure['proxies']
 
+requests_timeout = configure['timeout']

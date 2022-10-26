@@ -4,7 +4,7 @@ import os
 import shutil
 import magic
 import traceback
-from conf.config import requests_proxy
+from conf.config import requests_proxy, requests_timeout
 from conf.paths import DOWNLOAD_HOME
 from libs.regex import html, js_css, coding, archive
 from libs.web import pywget
@@ -12,14 +12,14 @@ from utils.filedir import traverse
 from libs.logger import logger
 
 
-def download(url, outdir=None, proxies=requests_proxy, auto_unzip=False):
+def download(url, outdir=None, timeout=requests_timeout, proxies=requests_proxy, auto_unzip=False):
     outdir = DOWNLOAD_HOME if outdir is None else outdir
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     # 下载文件
     try:
         logger.info('downloading: %s' % url)
-        info = pywget.download(url, out=outdir, proxies=proxies)
+        info = pywget.download(url, out=outdir, timeout=timeout, proxies=proxies)
         filepath = '' if info.filepath is None else info.filepath
         if filepath:
             logger.info('>> saved to: %s' % filepath)
@@ -48,10 +48,10 @@ def download(url, outdir=None, proxies=requests_proxy, auto_unzip=False):
     return info
 
 
-def batch_download(urls, outdir=None, proxies=requests_proxy):
+def batch_download(urls, outdir=None, timeout=requests_timeout, proxies=requests_proxy, auto_unzip=False):
     infos = list()
     for url in urls:
-        infos.append(download(url, outdir=outdir, proxies=proxies))
+        infos.append(download(url, outdir=outdir, timeout=timeout, proxies=proxies, auto_unzip=auto_unzip))
     return infos
 
 

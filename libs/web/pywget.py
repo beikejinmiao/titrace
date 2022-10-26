@@ -152,7 +152,7 @@ def try_except(func):
     return wrapper
 
 
-def download(url, out=None, size_limit=209715200, proxies=None):
+def download(url, out=None, timeout=10, size_limit=209715200, proxies=None):
     # https://stackoverflow.com/questions/16694907/download-large-file-in-python-with-requests
     # NOTE the stream=True parameter below
     parsed = urlparse(url)
@@ -163,7 +163,7 @@ def download(url, out=None, size_limit=209715200, proxies=None):
         # ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed:
         # unable to get local issuer certificate (_ssl.c:1131)
         # 必须设置timeout,否则可能会永远等待导致程序挂起
-        with requests.get(url, timeout=10, stream=True, headers=http_headers, verify=False, proxies=proxies) as resp:
+        with requests.get(url, timeout=timeout, stream=True, headers=http_headers, verify=False, proxies=proxies) as resp:
             # 获取远程文件名
             resp_headers = resp.headers
             info.filename = detect_filename(url, None, resp_headers)
@@ -206,13 +206,13 @@ def download(url, out=None, size_limit=209715200, proxies=None):
     return info
 
 
-def retrieve(url, proxies=None):
+def retrieve(url, timeout=10, proxies=None):
     parsed = urlparse(url)
     http_headers['Referer'] = '%s://%s/' % (parsed.scheme, parsed.netloc)
     # http_headers['Accept-encoding'] = 'gzip, deflate'
     info = RespFileInfo(url=url)
     try:
-        resp = requests.get(url, timeout=10, headers=http_headers, verify=False, proxies=proxies)
+        resp = requests.get(url, timeout=timeout, headers=http_headers, verify=False, proxies=proxies)
         # 获取远程文件名
         resp_headers = resp.headers
         info.filename = detect_filename(url, None, resp_headers)

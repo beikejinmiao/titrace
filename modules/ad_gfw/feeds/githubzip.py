@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 from libs.regex import find_domains
 from utils.filedir import reader_g
-from libs.web.downloader import download_zip
+from libs.web.downloader import download
 
 
 __url__ = [
@@ -18,10 +18,10 @@ def fetch(outdir=None):
     domains = set()
     failed_urls = dict()
     for url in __url__:
-        info, unzip_files = download_zip(url, outdir=__info__ if not outdir else outdir)
+        info = download(url, outdir=__info__ if not outdir else outdir, auto_unzip=True)
         if not info.success:
             failed_urls[url] = info.desc
-        for filepath in unzip_files:
+        for filepath in info.filepath[1]:
             for line in reader_g(filepath):
                 domains |= find_domains(line)
     return domains, failed_urls

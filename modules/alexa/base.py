@@ -1,26 +1,23 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 import os
+import pandas as pd
 from datetime import datetime
 from conf.paths import DOWNLOAD_HOME
-from utils.filedir import reader_g
-from libs.web.downloader import download_zip
+from libs.web.downloader import download
 
 
 MOD_DOWNLOAD_HOME = os.path.join(DOWNLOAD_HOME, 'alexa', datetime.now().strftime('%Y%m%d'))
 
 
 def crawl(url, outdir='tmp'):
-    domains = list()
-    info, unzip_files = download_zip(url, outdir=os.path.join(MOD_DOWNLOAD_HOME, outdir))
+    info = download(url, outdir=os.path.join(MOD_DOWNLOAD_HOME, outdir), auto_unzip=True)
     if not info.success:
-        return domains  # empty
+        return list()  # empty
     # 数据样例
     # 1,google.com
     # 2,youtube.com
     # 3,microsoft.com
-    for line in reader_g(unzip_files[0]):
-        seq, domain = line.split(',')
-        domains.append(domain)
-    return domains
+    df = pd.read_csv(info.filepath[1][0], names=['Rank', 'Domain'])
+    return df['Domain'].values.tolist()
 

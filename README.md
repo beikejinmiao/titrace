@@ -23,17 +23,20 @@
  - https://hackertarget.com/top-million-site-list-download/
 
 #### feeds列表
- - [Alexa](https://www.alexa.com/)   
+ - [**Alexa**](https://www.alexa.com/)   
     https://s3.amazonaws.com/alexa-static/top-1m.csv.zip　　[2022年5月停止服务]
- - [Cisco Umbrella](https://s3-us-west-1.amazonaws.com/umbrella-static/index.html)      
+ - [**Cisco Umbrella**](https://s3-us-west-1.amazonaws.com/umbrella-static/index.html)      
     https://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip
- - [Majestic](https://majestic.com/reports/majestic-million)    
+ - [**Majestic**](https://majestic.com/reports/majestic-million)    
     https://downloads.majestic.com/majestic_million.csv
- -  [Statvoo](https://statvoo.com/top/ranked)      
+ -  [**Statvoo**](https://statvoo.com/top/ranked)      
     https://statvoo.com/dl/top-1million-sites.csv.zip
- - [Tranco](https://tranco-list.eu/)     
+ - [**Tranco**](https://tranco-list.eu/)     
     https://tranco-list.s3.amazonaws.com/top-1m.csv.zip
-
+ - [**DomCop**](https://www.domcop.com/top-10-million-websites)       
+    https://www.domcop.com/files/top/top10milliondomains.csv.zip
+ - [**BuiltWith**](https://builtwith.com/top-1m)     
+    https://builtwith.com/dl/builtwith-top1m.zip
 
 ### [govcn](https://github.com/beikejinmiao/titrace/tree/main/modules/govcn)
 以可信网站([四川省政府](https://www.sc.gov.cn/))为起始页

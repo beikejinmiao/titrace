@@ -5,6 +5,7 @@ import pandas as pd
 from libs.web.downloader import download
 from modules.alexa.base import MOD_DOWNLOAD_HOME
 
+# https://majestic.com/reports/majestic-million
 __url__ = 'http://downloads.majestic.com/majestic_million.csv'
 __info__ = 'majestic'
 
@@ -19,6 +20,6 @@ def fetch(outdir=None):
     # 1,1,google.com,com,491249,2418262,google.com,com,1,1,489595,2408964
     # 2,2,facebook.com,com,489261,2563757,facebook.com,com,2,2,487292,2552252
     df = pd.read_csv(info.filepath)
-    return df['domain'].values.tolist()
+    return df['Domain'].values.tolist()
 
 

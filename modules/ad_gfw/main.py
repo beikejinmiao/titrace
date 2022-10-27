@@ -9,11 +9,11 @@ class AdGfwFeedsManager(AbstractFeedsManager):
         self.failed_urls = dict()
 
     def runner(self):
-        results = self.fetch()
+        results = self.crawl()
         for feed, result in results.items():
             _hosts_, _failed_urls_ = result
             for host in _hosts_:
-                self.add_host(host)
+                self.append(host)
             self.failed_urls.update(_failed_urls_)
         #
         self.save('%s.failed_urls.%s.json' % (self.module, self.date), self.failed_urls)

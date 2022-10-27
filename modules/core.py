@@ -12,16 +12,14 @@ from utils.filedir import traverse, writer, reader_g
 from libs.logger import logger
 
 
-class AbstractFeedsManager(object):
+class AbstractManager(object):
     def __init__(self, module, date=None):
         self.module = module
         self.date = datetime.now().strftime('%Y%m%d') if not date else date
         self.download_home = os.path.join(DOWNLOAD_HOME, self.module, self.date)
         self.resource_home = os.path.join(PRIVATE_RESOURCE_HOME, self.module)
-        #
-        self.hosts, self.domains = list(), list()       # 使用list保存添加顺序
-        self._existed_hosts, self._existed_domains = set(), set()
-
+        self.hosts = None
+        self.domains = None
         # ddns = tuple(reader(os.path.join(PRIVATE_RESOURCE_HOME, 'ddns.txt')))
         # self.domextract = tldextract.TLDExtract(include_psl_private_domains=True, extra_suffixes=ddns)
         self.domextract = tldextract.TLDExtract()
@@ -36,8 +34,47 @@ class AbstractFeedsManager(object):
             os.makedirs(self.resource_home)
             logger.info('mkdir: %s' % self.resource_home)
 
+    def crawl(self):
+        pass
+
+    def append(self, host):
+        pass
+
+    def save(self, filename, dataset):
+        path = os.path.join(self.resource_home, filename)
+        writer(path, dataset, sort=None)
+        logger.info('save to %s' % path)
+
+    def builtin_save(self, copy=False):
+        """
+        copy设置为True时，避免多线程异步保存触发异常RuntimeError: dictionary changed size during iteration
+        """
+        if self.domains is not None:
+            if isinstance(self.domains, dict):
+                suffix = 'json'
+            else:
+                suffix = 'txt'
+            self.save('%s.%s.%s' % (self.module, self.date, suffix), self.domains if not copy else self.domains.copy())
+        if self.hosts is not None:
+            if isinstance(self.hosts, dict):
+                suffix = 'json'
+            else:
+                suffix = 'txt'
+            self.save('%s.host.%s.%s' % (self.module, self.date, suffix), self.hosts if not copy else self.hosts.copy())
+
+    def start(self):
+        pass
+
+
+class AbstractFeedsManager(AbstractManager):
+    def __init__(self, module, date=None):
+        super().__init__(module, date=date)
+        #
+        self.hosts, self.domains = list(), list()       # 使用list保存添加顺序
+        self._existed_hosts, self._existed_domains = set(), set()
+
     @property
-    def _feed_funcs(self):
+    def _feed_fetch_funcs(self):
         functions = dict()
         fetch_path = 'modules.{module}.feeds.%s.fetch'.format(module=self.module)
         for pyfile in traverse(
@@ -48,7 +85,7 @@ class AbstractFeedsManager(object):
             functions[feed] = func
         return functions
 
-    def fetch(self):
+    def crawl(self):
         """
         并发下载feed
         :return:
@@ -56,10 +93,10 @@ class AbstractFeedsManager(object):
         # https://stackoverflow.com/questions/6893968/how-to-get-the-return-value-from-a-thread-in-python
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = list()
-            feeds = list(self._feed_funcs.keys())
+            feeds = list(self._feed_fetch_funcs.keys())
             for feed in feeds:
                 logger.info('%s %s %s' % ('-' * 30, feed, '-' * 30))
-                futures.append(executor.submit(self._feed_funcs[feed], os.path.join(self.download_home, feed)))
+                futures.append(executor.submit(self._feed_fetch_funcs[feed], os.path.join(self.download_home, feed)))
             results = dict(zip(feeds, [future.result() for future in futures]))
         return results
 
@@ -67,31 +104,22 @@ class AbstractFeedsManager(object):
         pass
         # 自定义处理爬取结果
 
-    def add_host(self, host):
+    def append(self, host):
         """
         :param host:
         :return: 若发现新域名,则返回域名内容
         """
         host = str(host).strip()
-        if host in self._existed_hosts:
+        if not host or host in self._existed_hosts:
             return
         self.hosts.append(host)
         self._existed_hosts.add(host)
         domain = self.domextract(host).registered_domain
-        if domain in self._existed_domains:
+        if not domain or domain in self._existed_domains:
             return
         self.domains.append(domain)
         self._existed_domains.add(domain)
         return domain
-
-    def save(self, filename, dataset):
-        path = os.path.join(self.resource_home, filename)
-        writer(path, dataset, sort=None)
-        logger.info('save to %s' % path)
-
-    def _save_builtin(self):
-        self.save('%s.%s.txt' % (self.module, self.date), self.domains)
-        self.save('%s.host.%s.txt' % (self.module, self.date), self.hosts)
 
     def traverse(self):
         """
@@ -108,8 +136,8 @@ class AbstractFeedsManager(object):
         if refresh:
             self._init_env()
             self.runner()
-            self._save_builtin()
+            self.builtin_save()
         else:
             for host in self.traverse():
-                self.add_host(host)
+                self.append(host)
 

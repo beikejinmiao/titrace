@@ -9,13 +9,13 @@ class AlexaFeedsManager(AbstractFeedsManager):
         self.top100k_sites = list()
 
     def runner(self):
-        results = self.fetch()
+        results = self.crawl()
         for i in range(1000000):
             for feed, result in results.items():
                 if i >= len(result):
                     continue
                 host = result[i]
-                domain = self.add_host(host)
+                domain = self.append(host)
                 if i < 100000 and domain:
                     self.top100k_sites.append(domain)
         #

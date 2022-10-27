@@ -122,7 +122,7 @@ def writer(path, dataset, method="w", encoding='utf-8', sort=False, indent=4):
         if isinstance(dataset, str):
             fout.write(dataset)
         elif isinstance(dataset, dict):
-            json.dump(dataset, fout, indent=indent)
+            json.dump(dataset, fout, indent=indent, ensure_ascii=False)     # 避免保存为Unicode
         else:
             if sort is not None:
                 dataset = sorted(dataset, reverse=sort)

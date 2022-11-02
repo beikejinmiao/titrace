@@ -2,17 +2,17 @@
 # -*- coding:utf-8 -*-
 import re
 import traceback
+import socket
 import requests
-from requests import HTTPError
 from urllib.parse import urlparse
 from http.client import responses
 from bs4 import BeautifulSoup
-from collections import defaultdict
 from conf.config import http_headers
 from libs.web.url import urlfile, normal_url, absurl
 from libs.web.pywget import auto_decode
 from libs.logger import logger
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from requests.exceptions import ConnectionError, ReadTimeout, ProxyError
+from requests.packages.urllib3.exceptions import InsecureRequestWarning, ReadTimeoutError, MaxRetryError
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -31,30 +31,31 @@ class RespInfo(object):
         return str(d)
 
 
-def try_crawl(url, resp=None, max_depth=4):
+def try_crawl(url, timeout=10, max_depth=4):
     """
     :param url:
-    :param resp: 重定向追踪中的前一次响应内容
+    :param timeout:
     :param max_depth: 设置重定向追踪爬取最大深度,避免RecursionError
     :return:
     """
+    info = RespInfo(url=url)    # 如果发生重定向,那么url内容是重定向后的url
     try:
         parsed = urlparse(url)
         http_headers['Referer'] = '%s://%s/' % (parsed.scheme, parsed.netloc)
-        resp = requests.get(normal_url(url), timeout=5, headers=http_headers, verify=False)
-        resp.raise_for_status()
+        resp = requests.get(normal_url(url), timeout=timeout, headers=http_headers, verify=False)
+        info.text = auto_decode(resp.content, default=resp.text)
+        info.status_code, info.desc = resp.status_code, resp.reason
+        # resp.raise_for_status()
         if resp.history and max_depth > 0:
-            return try_crawl(resp.url, resp=resp, max_depth=max_depth-1)
-    except HTTPError:
-        return RespInfo(url=url, status_code=resp.status_code, desc=resp.reason)
+            return try_crawl(resp.url, timeout=timeout, max_depth=max_depth-1)
+    except (socket.timeout, ConnectionError, ReadTimeout, ReadTimeoutError, MaxRetryError, ProxyError) as e:
+        logger.error('crawl url error: %s %s' % (url, repr(e)))
+        info.desc = repr(e)
     except Exception as e:
         logger.error('crawl url error: %s %s' % (url, repr(e)))
         logger.error(traceback.format_exc())
-        return RespInfo(url=url, status_code=-1, desc=type(e).__name__)
-    #
-    text = auto_decode(resp.content, default=resp.text)
-    # 如果发生重定向,那么url内容是重定向后的url
-    return RespInfo(url=url, text=text, status_code=resp.status_code, desc=resp.reason)
+        info.desc = type(e).__name__
+    return info
 
 
 """
@@ -66,16 +67,19 @@ def strip(text):
     return re.sub(r'[\r\n\t]+', '', text).strip() if text else ''
 
 
-def page_info(url):
+def page_info(url, text=None):
     title = ''
-    resp_info = try_crawl(url)
+    if not text:
+        info = try_crawl(url)
+    else:
+        info = RespInfo(url=url, text=text)
     try:
-        if resp_info.text:
-            soup = BeautifulSoup(resp_info.text, "lxml")  # soup = BeautifulSoup(resp.text, "lxml")
+        if info.text:
+            soup = BeautifulSoup(info.text, "lxml")  # soup = BeautifulSoup(resp.text, "lxml")
             title_labels = soup.find_all('title')
-            if title_labels:
+            if len(title_labels) > 0:
                 title = title_labels[0].text
-            resp_info.title = strip(title)
+            info.title = strip(title)
     except TypeError:
         # BeautifulSoup解析图片时：  TypeError: object of type 'NoneType' has no len()
         pass
@@ -83,16 +87,24 @@ def page_info(url):
         logger.error('find title error: %s' % url)
         logger.error(traceback.format_exc())
     # title为空时,默认使用从url中提取文件名
-    if not resp_info.title:
-        resp_info.title = urlfile(url)
+    if not info.title:
+        info.title = urlfile(url)
     #
-    if not resp_info.desc:
-        resp_info.desc = responses.get(resp_info.status_code, '')
-    return resp_info
+    if not info.desc:
+        info.desc = responses.get(info.status_code, '')
+    return info
 
 
-def page_title(url):
-    return page_info(url).title
+def page_title(url, text=None, soup=None):
+    title = ''
+    if soup is not None:
+        title_labels = soup.find_all('title')
+        if len(title_labels) > 0:
+            title = title_labels[0].text
+            title = strip(title)
+    else:
+        title = page_info(url, text=text).title
+    return title
 
 """
 从网页中提取所有链接和标题
@@ -161,7 +173,8 @@ def page_a_href(url, text=None, regex=False):
 
 
 def page_href(url, text=None):
-    _urls_title = defaultdict(set)  # key: href url, value: title set
+    # _urls_title = defaultdict(set)  # key: href url, value: title set
+    _urls_title = dict()  # key: href url, value: title
     if text is None:
         text = try_crawl(url).text
     # 获取当前链接的目录路径,用于本站内部相对路径href拼接
@@ -171,6 +184,7 @@ def page_href(url, text=None):
     urldir = urldir if urldir.endswith('/') else (urldir + '/')  # 和href拼接时需要有/
     # 单独处理a标签
     soup = BeautifulSoup(text, "lxml")
+    _urls_title[url] = page_title(url, soup=soup)
     links = soup.find_all('a')
     for link in links:
         # 从<a>标签中提取href
@@ -189,28 +203,30 @@ def page_href(url, text=None):
         else:
             # 相对路径href
             _url = urldir + href
-        _urls_title[absurl(_url)].add(title)
+        _url = absurl(_url)
+        if _url not in _urls_title:
+            _urls_title[_url] = title
     # 提取其他标签超链接
     for label, attr in URL_LABELS.items():
         for ele in soup.find_all(label):
             if isinstance(attr, (tuple, list)):
                 for _attr_ in attr:
                     if _attr_ in ele.attrs and _is_url(ele.attrs[_attr_]):
-                        _urls_title[ele.attrs[_attr_]].add(strip(ele.string))
+                        _urls_title[ele.attrs[_attr_]] = strip(ele.string)
             elif attr in ele.attrs and _is_url(ele.attrs[attr]):
-                _urls_title[ele.attrs[attr]].add(strip(ele.string))
+                _urls_title[ele.attrs[attr]] = strip(ele.string)
     #
     candidates = re.findall(r'url\(([A-Za-z]+://.+)\)', text)       # <div style="background: url(image.png)">
     if len(candidates) > 0:
-        _urls_title[candidates[0]].add('')
+        _urls_title[candidates[0]] = ''
     #
     urls_title = dict()
-    for _url, titles in _urls_title.items():
+    for _url, title in _urls_title.items():
         # 同一个url在页面内多次出现,那么拼接相应的多个标题
-        urls_title[normal_url(_url)] = ' '.join(titles)
+        urls_title[normal_url(_url)] = title
     return urls_title
 
 
 if __name__ == '__main__':
-    print(page_href('https://www.henanrd.gov.cn/'))
+    print(page_href('http://www.scspc.gov.cn/'))
 

@@ -24,7 +24,7 @@ doc = re.compile(r".*\.("
                  r"wps|wpt|et|ett|dps|dpt|vsd|vsdx|pdf|odt|chm"
                  r")$", re.I)
 html = re.compile(r".*\.(html|htm|html5|shtml|shtm|xhtml|mht|mhtml|phtml|asp|aspx|jsp|jspx|php|do)$", re.I)
-js_css = re.compile(r".*\.(js|ts|tsx|css)$", re.I)
+js_css = re.compile(r".*\.(js|mjs|ts|tsx|css)$", re.I)
 img = re.compile(r".*\.(jpg|jpeg|jpgv|gif|png|pngc|ico|bmp|svg|pic|tif|tiff|psd|swf)$", re.I)
 video = re.compile(r".*\.(mp4|mp3|avi|mkv|flv|3gp|ts|m3u8|wav|mov|wmv|wmx|webm)$", re.I)
 executable = re.compile(r".*\.(dll|exe|msi|apk|iso|bin|jar|class|pyc|rpm|deb|whl|dbf)$", re.I)
@@ -37,7 +37,7 @@ file = re.compile(r".*\.("
                   r"mp4|mp3|avi|mkv|flv|3gp|ts|m3u8|wav|mov|wmv|wmx|"
                   r"jar|class|rpm|deb|whl|dbf"
                   r")$", re.I)
-gov_edu = re.compile(r"^([0-9a-zA-Z][0-9a-zA-Z\-]{0,62}\.){1,255}(gov|edu)(\.[a-zA-Z]{2})?")
+gov_edu = re.compile(r"^([\w-]+\.)+(gov|edu)(\.[a-zA-Z]{2})?")
 common_dom = re.compile(r".*\.(com|cn|net|org|info|edu|gov|mil|top|biz|int|name|tw|(gov|edu)\.[a-zA-Z]{2})$", re.I)
 
 

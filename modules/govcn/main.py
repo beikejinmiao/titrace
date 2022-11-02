@@ -6,12 +6,14 @@ import time
 import traceback
 from collections import deque, defaultdict
 from urllib.parse import urlparse
+from pybloom_live import BloomFilter
 from libs.timer import timer
 from libs.regex import is_gov_edu
 from libs.web.url import urlfile, urlsite
 from libs.web.page import page_href, page_title
 from libs.wrapper import threaded
 from modules.core import AbstractManager
+from tools.alexa_bloom import ALEXA_BLOOM_FILTER_100K_PATH
 from libs.logger import logger
 
 
@@ -19,10 +21,14 @@ class WebsiteManager(AbstractManager):
     """
     政企网站每个站点(主站和子站)最多爬取N个网页,其他网站只爬取站点(主站和子站)主页
     """
-    def __init__(self, start_url='https://www.sc.gov.cn/', n_thread=10, max_gov_link=10):
+    def __init__(self, start_url='https://www.sc.gov.cn/',
+                 ignore_ip=True, ignore_alexa=False,
+                 n_thread=10, max_gov_link=10):
         super().__init__('govcn')
         #
         self._start_url = start_url
+        self.ignore_ip = ignore_ip
+        self.ignore_alexa = ignore_alexa
         self.n_thread = n_thread
         self.max_gov_link = max(1, max_gov_link)  # 控制政企网站爬取深度
         self._host_url_limit = defaultdict(lambda: 0)
@@ -33,6 +39,9 @@ class WebsiteManager(AbstractManager):
         self.domains = dict()
         self.queue = deque()
         self._wait_second = 1       # seconds
+        #
+        with open(ALEXA_BLOOM_FILTER_100K_PATH, 'rb') as fopen:
+            self.alexa = BloomFilter.fromfile(fopen)
 
     def append(self, host, domain=None, title='', update=False):
         host = str(host).strip().lower()
@@ -69,6 +78,9 @@ class WebsiteManager(AbstractManager):
 
         return is_home_page, site.hostname, site.reg_domain, homepage
 
+    # 过滤IP URL、过滤主机名URL(例如：localhost, test)
+    ip_local_url = re.compile(r'^(\w+://)?((\d+.){3}\d+|\w+)(:\d+)?(/|$)')
+
     @threaded(daemon=True, start=False)
     def crawl(self):
         wait_time = 0
@@ -76,6 +88,8 @@ class WebsiteManager(AbstractManager):
         while wait_time <= 3600:
             try:
                 url, title = self.queue.popleft()       # deque线程安全
+                if self.ignore_ip and self.ip_local_url.match(url):
+                    continue
             except IndexError:  # deque is empty
                 wait_time += self._wait_second
                 time.sleep(self._wait_second)
@@ -90,6 +104,8 @@ class WebsiteManager(AbstractManager):
                         continue
                     self._host_url_limit[homepage] += 1
                 else:
+                    if self.ignore_alexa and domain in self.alexa:
+                        continue
                     if not is_home_page:
                         continue
                 #

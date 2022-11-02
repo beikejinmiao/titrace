@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+import re
 import os
 import time
-from collections import deque
+import traceback
+from collections import deque, defaultdict
 from urllib.parse import urlparse
 from libs.timer import timer
 from libs.regex import is_gov_edu
@@ -14,13 +16,17 @@ from libs.logger import logger
 
 
 class WebsiteManager(AbstractManager):
-    def __init__(self, start_url='https://www.sc.gov.cn/', n_thread=10, max_gov_depth=2):
+    """
+    政企网站每个站点(主站和子站)最多爬取N个网页,其他网站只爬取站点(主站和子站)主页
+    """
+    def __init__(self, start_url='https://www.sc.gov.cn/', n_thread=10, max_gov_link=10):
         super().__init__('govcn')
         #
         self._start_url = start_url
         self.n_thread = n_thread
-        self.max_gov_depth = max(2, max_gov_depth)  # 控制政企网站爬取深度
-
+        self.max_gov_link = max(1, max_gov_link)  # 控制政企网站爬取深度
+        self._host_url_limit = defaultdict(lambda: 0)
+        #
         self.threads = list()
         self.urls = dict()      # key: url, value: 该url的title
         self.hosts = dict()     # key: url host, value: 该host的title(首次)
@@ -28,23 +34,40 @@ class WebsiteManager(AbstractManager):
         self.queue = deque()
         self._wait_second = 1       # seconds
 
-    def append(self, host, domain='', title=''):
-        host = str(host).strip()
-        if not host or host in self.hosts:
+    def append(self, host, domain=None, title='', update=False):
+        host = str(host).strip().lower()
+        if not host:
             return
-        self.hosts[host] = title
-        if not domain or domain in self.domains:
+        if host not in self.hosts:
+            self.hosts[host] = title
+        else:
+            old_title = self.hosts[host]
+            if title and (old_title or update is True):
+                self.hosts[host] = title
+        #
+        if domain is None:
+            domain = self.domextract(host).registered_domain
+        if not domain:
             return
-        self.domains[domain] = title
+        if domain not in self.domains:
+            self.domains[domain] = title
+        else:
+            old_title = self.domains[domain]
+            if title and (old_title or update is True):
+                self.domains[domain] = title
 
     @staticmethod
-    def _is_home_page(url):
+    def _home_page(url):
+        site = urlsite(url)
         parts = urlparse(url)
-        homepage1 = "{0.scheme}://{0.netloc}".format(parts)
-        homepage = homepage1 + '/'
-        if homepage == url or homepage1 == url:
-            return True
-        return False
+        _homepage = '{scheme}://{host}'.format(scheme=parts.scheme, host=site.hostname)
+        homepage = _homepage + '/'
+        #
+        is_home_page = False
+        if _homepage == url or homepage == url:
+            is_home_page = True
+
+        return is_home_page, site.hostname, site.reg_domain, homepage
 
     @threaded(daemon=True, start=False)
     def crawl(self):
@@ -52,52 +75,62 @@ class WebsiteManager(AbstractManager):
         # 持续等待1小时后,没有新URL出现,退出
         while wait_time <= 3600:
             try:
-                url, depth = self.queue.popleft()       # deque线程安全
+                url, title = self.queue.popleft()       # deque线程安全
             except IndexError:  # deque is empty
                 wait_time += self._wait_second
                 time.sleep(self._wait_second)
                 continue
             wait_time = 0   # 置零
             #
-            logger.info('crawl url: %s %s' % (url, self.urls[url]))
-            urls_title = page_href(url)
-            for _url_, title in urls_title.items():
-                if len(urlfile(_url_)) > 0 or _url_ in self.urls:
-                    continue
-                self.urls[_url_] = title
-                is_home_page = self._is_home_page(_url_)
-                #
-                site = urlsite(_url_)
-                host, domain = site.hostname, site.reg_domain
-                if is_home_page:
-                    self.append(host, domain=domain, title=title)
-                if depth <= 0:
-                    continue
-                # 新URL(已爬取网站新页面/新网站主页/新网站其他页面)
-                _depth_ = depth     # 重新赋值,避免多线程下
+            try:
+                is_home_page, host, domain, homepage = self._home_page(url)
                 if is_gov_edu(host):
-                    # 政府&学校网站主页可向下爬取多层
-                    if is_home_page:
-                        _depth_ = self.max_gov_depth+1
+                    # 政府&学校网站主页可爬取非主页链接
+                    if self._host_url_limit[homepage] >= self.max_gov_link:
+                        continue
+                    self._host_url_limit[homepage] += 1
                 else:
-                    # 普通网站只爬取1层后结束
-                    _depth_ = 1
-                # TODO 未限制deque大小,可能会造成OOM问题
-                self.queue.append((_url_, _depth_-1))
+                    if not is_home_page:
+                        continue
+                #
+                urls_title = page_href(url)
+                if is_home_page:
+                    # 从页面中的<title>标签获取标题并强制更新
+                    home_title = urls_title[url]
+                    if not title or len(re.findall('[\u4e00-\u9fa5]', home_title)) >= 2:     # 针对外网网站名,保留中文描述
+                        title = home_title
+                    self.append(host, domain=domain, title=title, update=True)
+                logger.info('crawled url: %s %s' % (url, title))
+                #
+                for _url_, _title_ in urls_title.items():
+                    if len(urlfile(_url_)) > 0 or _url_ in self.urls:
+                        continue
+                    # 新URL(已爬取网站新页面/新网站主页/新网站其他页面)
+                    self.urls[_url_] = _title_
+                    _is_home_page_, _host_, _domain_, _homepage_ = self._home_page(_url_)
+                    # 使用页面中的超链接描述当做标题
+                    if _is_home_page_:
+                        self.append(_host_, domain=_domain_, title=_title_)
+                    # TODO 未限制deque大小,可能会造成OOM问题
+                    self.queue.append((_url_, _title_))
+            except:
+                logger.error(traceback.format_exc())
 
     @timer(10, 10)
     def regular_save(self):
         # RuntimeError: dictionary changed size during iteration
         self.builtin_save(copy=True)
         self.save(os.path.join(self.download_home, '%s.url.%s.json' % (self.module, self.date)), self.urls.copy())
+        logger.info('queue size: %s' % len(self.queue))
 
     def start(self):
         self._init_env()
         #
-        self.urls[self._start_url] = page_title(self._start_url)
+        _start_url_title = page_title(self._start_url)
+        self.urls[self._start_url] = _start_url_title
         for i in range(self.n_thread):
             self.threads.append(self.crawl())
-        self.queue.append((self._start_url, self.max_gov_depth))
+        self.queue.append((self._start_url, _start_url_title))
         for thread in self.threads:
             thread.start()
         self.regular_save()     # 定期保存
@@ -106,5 +139,5 @@ class WebsiteManager(AbstractManager):
 
 
 if __name__ == '__main__':
-    man = WebsiteManager()
+    man = WebsiteManager(n_thread=10, max_gov_link=10)
     man.start()

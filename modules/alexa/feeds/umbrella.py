@@ -8,7 +8,9 @@ __info__ = 'umbrella'
 
 
 def fetch(outdir=None):
-    return crawl(__url__, outdir=__info__ if not outdir else outdir)
+    # 并未过滤恶意域名,暂时取Top50w
+    # umbrella与netlab dga域名碰撞概率比其他源要大得多
+    return crawl(__url__, outdir=__info__ if not outdir else outdir, top=500000)
 
 
 

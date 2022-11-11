@@ -22,13 +22,19 @@ class AlexaFeedsManager(AbstractFeedsManager):
         self.save('%s.top100k.%s.txt' % (self.module, self.date), self.top100k_sites)
 
     def check(self, target):
-        for line, filepath in self.traverse():
-            if target in line:
-                print('"%s" in "%s"' % (target, filepath))
+        if isinstance(target, str):
+            target = [target]
+        for line_num, line, filepath in self.traverse():
+            for tgt in target:
+                if tgt in line:
+                    print('%s : %d : %s' % (filepath, line_num, line))
 
 
 if __name__ == '__main__':
-    man = AlexaFeedsManager(date='19700101')
+    man = AlexaFeedsManager()
     man.start()
-    # man.check('crowleychryslerjeepdodge.com')
+
+    # domains = ['jdhhbs.biz', 'ctdtgwag.biz', 'transetarary-emukebogic-underexuciless.biz',
+    #            'joinhouse.party', 'iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com']
+    # man.check(domains)
 

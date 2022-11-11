@@ -8,4 +8,5 @@ __info__ = 'tranco'
 
 
 def fetch(outdir=None):
-    return crawl(__url__, outdir=__info__ if not outdir else outdir)
+    # 并未过滤恶意域名,暂时取Top50w
+    return crawl(__url__, outdir=__info__ if not outdir else outdir, top=500000)

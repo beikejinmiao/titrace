@@ -129,8 +129,8 @@ class AbstractFeedsManager(AbstractManager):
         for filepath in traverse(self.download_home):
             if not is_data_file(filepath):
                 continue
-            for line in reader_g(filepath, debug=False):
-                yield line, filepath
+            for i, line in enumerate(reader_g(filepath, debug=False)):
+                yield i+1, line, filepath
 
     def start(self, refresh=True):
         if refresh:
@@ -138,6 +138,6 @@ class AbstractFeedsManager(AbstractManager):
             self.runner()
             self.builtin_save()
         else:
-            for host in self.traverse():
-                self.append(host)
+            for info in self.traverse():
+                self.append(info[1])
 

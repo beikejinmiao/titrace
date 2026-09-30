@@ -8,14 +8,15 @@ __version__ = "1.0"
 
 import os
 import socket
+import urllib3
 import requests
 from urllib.parse import urlparse
 from http.client import responses
 from requests import HTTPError
 from requests.exceptions import ConnectionError, ReadTimeout, ProxyError
-from requests.packages.urllib3.exceptions import InsecureRequestWarning, ReadTimeoutError, MaxRetryError
+from urllib3.exceptions import InsecureRequestWarning, ReadTimeoutError, MaxRetryError
 
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+urllib3.disable_warnings(InsecureRequestWarning)
 
 
 # 尝试多种编码方式解码bytes

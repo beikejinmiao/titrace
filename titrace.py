@@ -8,7 +8,8 @@ from modules.govcn.main import WebsiteManager
 
 def main():
     processes = list()
-    for cls in [AdGfwFeedsManager, AlexaFeedsManager, WebsiteManager]:
+    # for cls in [AdGfwFeedsManager, AlexaFeedsManager, WebsiteManager]:
+    for cls in [AdGfwFeedsManager, AlexaFeedsManager]:
         man = cls()
         processes.append(Process(target=man.start))
     for pro in processes:

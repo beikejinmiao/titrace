@@ -1,11 +1,11 @@
-requests==2.25.1
-pandas==1.3.1
-tldextract==3.2.0
-PyYAML==5.4.1
-BeautifulSoup4==4.10.0
-lxml==4.6.3
-peewee==3.15.1
-python-magic==0.4.27
-python-magic-bin==0.4.14
-selenium==4.4.0
+requests==2.34.2
+pandas==3.0.6
+tldextract==5.3.2
+PyYAML==6.0.3
+beautifulsoup4==4.15.0
+lxml==6.1.3
+peewee==4.5.1
+# python-magic    # Linux users can install this package with `apt-get install libmagic1` or `yum install file-libs`.
+python-magic-bin  # Windows users can install the `python-magic-bin` package instead.
+selenium==4.49.0
 pybloom-live==3.1.0

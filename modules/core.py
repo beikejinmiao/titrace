@@ -13,7 +13,7 @@ from libs.logger import logger
 
 
 class AbstractManager(object):
-    def __init__(self, module, date=None):
+    def __init__(self, module: str, date: str=None):
         self.module = module
         self.date = datetime.now().strftime('%Y%m%d') if not date else date
         self.download_home = os.path.join(DOWNLOAD_HOME, self.module, self.date)
@@ -34,18 +34,13 @@ class AbstractManager(object):
             os.makedirs(self.resource_home)
             logger.info('mkdir: %s' % self.resource_home)
 
-    def crawl(self):
+    def fetch(self):
         pass
 
-    def append(self, host):
+    def add_host(self, *args, **kwargs):
         pass
 
-    def save(self, filename, dataset):
-        path = os.path.join(self.resource_home, filename)
-        writer(path, dataset, sort=None)
-        logger.info('save to %s' % path)
-
-    def _builtin_save(self, copy=False):
+    def _save_host(self, copy=False):
         """
         copy设置为True时，避免多线程异步保存触发异常RuntimeError: dictionary changed size during iteration
         """
@@ -62,12 +57,17 @@ class AbstractManager(object):
                 suffix = 'txt'
             self.save('%s.host.%s.%s' % (self.module, self.date, suffix), self.hosts if not copy else self.hosts.copy())
 
+    def save(self, filename, dataset):
+        path = os.path.join(self.resource_home, filename)
+        writer(path, dataset, sort=None)
+        logger.info('save to %s' % path)
+
     def start(self):
         pass
 
 
-class AbstractFeedsManager(AbstractManager):
-    def __init__(self, module, date=None):
+class FeedsManager(AbstractManager):
+    def __init__(self, module: str, date: str=None):
         super().__init__(module, date=date)
         #
         self.hosts, self.domains = list(), list()       # 使用list保存添加顺序
@@ -85,7 +85,7 @@ class AbstractFeedsManager(AbstractManager):
             functions[feed] = func
         return functions
 
-    def crawl(self):
+    def fetch(self):
         """
         并发下载feed
         :return:
@@ -100,11 +100,11 @@ class AbstractFeedsManager(AbstractManager):
             results = dict(zip(feeds, [future.result() for future in futures]))
         return results
 
-    def runner(self):
+    def run(self):
         pass
         # 自定义处理爬取结果
 
-    def append(self, host):
+    def add_host(self, host: str):
         """
         :param host:
         :return: 若发现新域名,则返回域名内容
@@ -135,9 +135,9 @@ class AbstractFeedsManager(AbstractManager):
     def start(self, refresh=True):
         if refresh:
             self._init_env()
-            self.runner()
-            self._builtin_save()
+            self.run()
+            self._save_host()
         else:
             for info in self.traverse():
-                self.append(info[1])
+                self.add_host(info[1])
 

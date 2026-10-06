@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 import os
-from modules.core import AbstractFeedsManager
+from modules.core import FeedsManager
 from datetime import datetime
 from conf.paths import DOWNLOAD_HOME
 from libs.web.downloader import download
@@ -24,13 +24,13 @@ def fetch_nodeseek():
     return domains
 
 
-class ICPManager(AbstractFeedsManager):
+class ICPManager(FeedsManager):
     def __init__(self, date=None):
         super().__init__('icp', date=date)
 
-    def runner(self):
+    def run(self):
         for dom in fetch_nodeseek():
-            self.append(dom)
+            self.add_host(dom)
 
     
 if __name__ == '__main__':

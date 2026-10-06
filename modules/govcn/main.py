@@ -43,7 +43,7 @@ class WebsiteManager(AbstractManager):
         with open(ALEXA_BLOOM_FILTER_100K_PATH, 'rb') as fopen:
             self.alexa = BloomFilter.fromfile(fopen)
 
-    def append(self, host, domain=None, title='', update=False):
+    def add_host(self, host, domain=None, title='', update=False):
         host = str(host).strip().lower()
         if not host:
             return
@@ -82,7 +82,7 @@ class WebsiteManager(AbstractManager):
     ip_local_url = re.compile(r'^(\w+://)?((\d+.){3}\d+|\w+)(:\d+)?(/|$)')
 
     @threaded(daemon=True, start=False)
-    def crawl(self):
+    def fetch(self):
         wait_time = 0
         # 持续等待1小时后,没有新URL出现,退出
         while wait_time <= 3600:
@@ -115,7 +115,7 @@ class WebsiteManager(AbstractManager):
                     home_title = urls_title[url]
                     if not title or len(re.findall('[\u4e00-\u9fa5]', home_title)) >= 2:     # 针对外网网站名,保留中文描述
                         title = home_title
-                    self.append(host, domain=domain, title=title, update=True)
+                    self.add_host(host, domain=domain, title=title, update=True)
                 logger.info('crawled url: %s %s' % (url, title))
                 #
                 for _url_, _title_ in urls_title.items():
@@ -126,7 +126,7 @@ class WebsiteManager(AbstractManager):
                     _is_home_page_, _host_, _domain_, _homepage_ = self._home_page(_url_)
                     # 使用页面中的超链接描述当做标题
                     if _is_home_page_:
-                        self.append(_host_, domain=_domain_, title=_title_)
+                        self.add_host(_host_, domain=_domain_, title=_title_)
                     # TODO 未限制deque大小,可能会造成OOM问题
                     self.queue.append((_url_, _title_))
             except:
@@ -135,7 +135,7 @@ class WebsiteManager(AbstractManager):
     @timer(10, 10)
     def regular_save(self):
         # RuntimeError: dictionary changed size during iteration
-        self.builtin_save(copy=True)
+        self._save_host(copy=True)
         self.save(os.path.join(self.download_home, '%s.url.%s.json' % (self.module, self.date)), self.urls.copy())
         logger.info('queue size: %s' % len(self.queue))
 
@@ -145,7 +145,7 @@ class WebsiteManager(AbstractManager):
         _start_url_title = page_title(self._start_url)
         self.urls[self._start_url] = _start_url_title
         for i in range(self.n_thread):
-            self.threads.append(self.crawl())
+            self.threads.append(self.fetch())
         self.queue.append((self._start_url, _start_url_title))
         for thread in self.threads:
             thread.start()

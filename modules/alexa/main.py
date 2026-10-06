@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-from modules.core import AbstractFeedsManager
+from modules.core import FeedsManager
 
 
-class AlexaFeedsManager(AbstractFeedsManager):
+class AlexaManager(FeedsManager):
     def __init__(self, date=None):
         super().__init__('alexa', date=date)
         self.top100k_sites = list()
 
-    def runner(self):
-        results = self.crawl()
+    def run(self):
+        results = self.fetch()
         for i in range(1000000):
             for feed, result in results.items():
                 if i >= len(result):
                     continue
                 host = result[i]
-                domain = self.append(host)
+                domain = self.add_host(host)
                 if i < 100000 and domain:
                     self.top100k_sites.append(domain)
         #
@@ -31,7 +31,7 @@ class AlexaFeedsManager(AbstractFeedsManager):
 
 
 if __name__ == '__main__':
-    man = AlexaFeedsManager()
+    man = AlexaManager()
     man.start()
 
     # domains = ['jdhhbs.biz', 'ctdtgwag.biz', 'transetarary-emukebogic-underexuciless.biz',

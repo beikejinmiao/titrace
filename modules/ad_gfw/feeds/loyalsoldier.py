@@ -22,6 +22,17 @@ __url__ = [
     'https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/google.txt',
     'https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/gfw.txt',
     'https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/greatfire.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/apple-cn.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/china-list.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/direct-list.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/google-cn.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/greatfire.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/proxy-list.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/reject-list.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/win-extra.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/win-spy.txt',
+    'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/win-update.txt',        
 ]
 __info__ = "loyalsoldier"
 

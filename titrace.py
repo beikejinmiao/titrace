@@ -3,13 +3,14 @@
 from multiprocessing import Process
 from modules.ad_gfw.main import AdGfwFeedsManager
 from modules.alexa.main import AlexaFeedsManager
+from modules.icp.main import ICPManager
 from modules.govcn.main import WebsiteManager
 
 
 def main():
     processes = list()
-    # for cls in [AdGfwFeedsManager, AlexaFeedsManager, WebsiteManager]:
-    for cls in [AdGfwFeedsManager, AlexaFeedsManager]:
+    # for cls in [AdGfwFeedsManager, AlexaFeedsManager, ICPManager, WebsiteManager]:
+    for cls in [AdGfwFeedsManager, AlexaFeedsManager, ICPManager]:
         man = cls()
         processes.append(Process(target=man.start))
     for pro in processes:

@@ -45,17 +45,17 @@ class AbstractManager(object):
         writer(path, dataset, sort=None)
         logger.info('save to %s' % path)
 
-    def builtin_save(self, copy=False):
+    def _builtin_save(self, copy=False):
         """
         copy设置为True时，避免多线程异步保存触发异常RuntimeError: dictionary changed size during iteration
         """
-        if self.domains is not None:
+        if self.domains:
             if isinstance(self.domains, dict):
                 suffix = 'json'
             else:
                 suffix = 'txt'
             self.save('%s.%s.%s' % (self.module, self.date, suffix), self.domains if not copy else self.domains.copy())
-        if self.hosts is not None:
+        if self.hosts:
             if isinstance(self.hosts, dict):
                 suffix = 'json'
             else:
@@ -136,7 +136,7 @@ class AbstractFeedsManager(AbstractManager):
         if refresh:
             self._init_env()
             self.runner()
-            self.builtin_save()
+            self._builtin_save()
         else:
             for info in self.traverse():
                 self.append(info[1])

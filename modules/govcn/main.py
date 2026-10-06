@@ -55,7 +55,7 @@ class WebsiteManager(AbstractManager):
                 self.hosts[host] = title
         #
         if domain is None:
-            domain = self.domextract(host).registered_domain
+            domain = self.domextract(host).top_domain_under_public_suffix
         if not domain:
             return
         if domain not in self.domains:

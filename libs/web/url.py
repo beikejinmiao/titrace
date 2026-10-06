@@ -26,11 +26,11 @@ def urlsite(url):
         site = urlparse(url).netloc
     #
     ext = tldextract.extract(url)
-    if not ext.registered_domain:
+    if not ext.top_domain_under_public_suffix:
         return UrlSiteResult(subdomain='', domain='', suffix='',
                              reg_domain='', hostname=site)
     return UrlSiteResult(subdomain=ext.subdomain, domain=ext.domain, suffix=ext.suffix,
-                         reg_domain=ext.registered_domain, hostname=ext.fqdn)
+                         reg_domain=ext.top_domain_under_public_suffix, hostname=ext.fqdn)
 
 
 def urlfile(url):

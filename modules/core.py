@@ -114,7 +114,7 @@ class FeedsManager(AbstractManager):
             return
         self.hosts.append(host)
         self._existed_hosts.add(host)
-        domain = self.domextract(host).registered_domain
+        domain = self.domextract(host).top_domain_under_public_suffix
         if not domain or domain in self._existed_domains:
             return
         self.domains.append(domain)

@@ -62,7 +62,7 @@ def check(hosts):
 
     for host in hosts:
         host = host.lower()
-        reg_domain = tldextract.extract(host).registered_domain
+        reg_domain = tldextract.extract(host).top_domain_under_public_suffix
         if not reg_domain:
             reg_domain = host
         results = dict()

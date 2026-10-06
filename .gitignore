@@ -21,6 +21,7 @@ venv/
 #
 download/
 *.log
+*.blm
 resources/alexa/
 resources/ad_gfw/
 resources/govcn/

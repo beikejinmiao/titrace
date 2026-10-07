@@ -13,7 +13,7 @@ from libs.web.url import urlfile, urlsite
 from libs.web.page import page_href, page_title
 from libs.wrapper import threaded
 from modules.core import AbstractManager
-from tools.alexa_bloom import ALEXA_BLOOM_FILTER_100K_PATH
+from tools.alexa_bloom import ALEXA_BLOOM_FILTER_1M_PATH
 from libs.logger import logger
 
 
@@ -40,7 +40,7 @@ class WebsiteManager(AbstractManager):
         self.queue = deque()
         self._wait_second = 1       # seconds
         #
-        with open(ALEXA_BLOOM_FILTER_100K_PATH, 'rb') as fopen:
+        with open(ALEXA_BLOOM_FILTER_1M_PATH, 'rb') as fopen:
             self.alexa = BloomFilter.fromfile(fopen)
 
     def add_host(self, host, domain=None, title='', update=False):

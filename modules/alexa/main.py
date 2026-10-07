@@ -6,20 +6,12 @@ from modules.core import FeedsManager
 class AlexaManager(FeedsManager):
     def __init__(self, date=None):
         super().__init__('alexa', date=date)
-        self.top100k_sites = list()
 
     def run(self):
         results = self.fetch()
-        for i in range(1000000):
-            for feed, result in results.items():
-                if i >= len(result):
-                    continue
-                host = result[i]
-                domain = self.add_host(host)
-                if i < 100000 and domain:
-                    self.top100k_sites.append(domain)
-        #
-        self.save('%s.top100k.%s.txt' % (self.module, self.date), self.top100k_sites)
+        for feed, result in results.items():
+            for host in result:
+                self.add_host(host)
 
     def check(self, target):
         if isinstance(target, str):

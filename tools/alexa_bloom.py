@@ -10,7 +10,6 @@ from libs.logger import logger
 
 
 ALEXA_BLOOM_FILTER_1M_PATH = os.path.join(PRIVATE_RESOURCE_HOME, 'top-1m-sites.blm')
-ALEXA_BLOOM_FILTER_100K_PATH = os.path.join(PRIVATE_RESOURCE_HOME, 'top-100k-sites.blm')
 
 
 def _create(src_file: str | list, blm_file, capacity=1000000):
@@ -27,12 +26,6 @@ def _create(src_file: str | list, blm_file, capacity=1000000):
     logger.info('Total domain count of \'%s\': %d' % (blm_file, len(bloom)))
 
 
-def create_100k():
-    capacity = 300000
-    filepath = glob.glob(os.path.join(PRIVATE_RESOURCE_HOME, 'alexa', 'alexa.top100k.*'))[-1]
-    _create(filepath, ALEXA_BLOOM_FILTER_100K_PATH, capacity=capacity)
-
-
 def create_1m():
     capacity = 3000000
     filepaths = [
@@ -46,10 +39,6 @@ def create_1m():
 
 def check(hosts):
     blooms = {
-        # 'alexa_100k': {
-        #     'blm_file': ALEXA_BLOOM_FILTER_100K_PATH,
-        #     'bloom': None,
-        # },
         'alexa_1m': {
             'blm_file': ALEXA_BLOOM_FILTER_1M_PATH,
             'bloom': None,

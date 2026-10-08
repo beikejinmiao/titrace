@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 import os
 import shutil
-import magic
+import filetype
 import traceback
 from conf.config import requests_proxy, requests_timeout
 from conf.paths import DOWNLOAD_HOME
@@ -59,8 +59,8 @@ def is_data_file(filepath):
     if html.match(filepath) or js_css.match(filepath) or coding.match(filepath):
         return False
     with open(filepath, 'rb') as fopen:
-        # https://pypi.org/project/python-magic/
-        mime_type = magic.from_buffer(fopen.read(2048), mime=True)
+        # https://pypi.org/project/filetype/
+        mime_type = filetype.guess_mime(fopen.read(2048))
     if not ('/' in mime_type and (mime_type.split('/', 1)[0] == 'text' or mime_type == 'application/xml')):
         return False
     return True

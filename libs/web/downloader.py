@@ -61,7 +61,8 @@ def is_data_file(filepath):
     with open(filepath, 'rb') as fopen:
         # https://pypi.org/project/filetype/
         mime_type = filetype.guess_mime(fopen.read(2048))
-    if not ('/' in mime_type and (mime_type.split('/', 1)[0] == 'text' or mime_type == 'application/xml')):
+    # txt/csv等常规文本文件，filetype.guess_mime返回为None
+    if mime_type and not ('/' in mime_type and (mime_type.split('/', 1)[0] == 'text' or mime_type == 'application/xml')):
         return False
     return True
 

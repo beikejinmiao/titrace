@@ -37,6 +37,8 @@
     https://www.domcop.com/files/top/top10milliondomains.csv.zip
  - [**BuiltWith**](https://builtwith.com/top-1m)     
     https://builtwith.com/dl/builtwith-top1m.zip
+ - [**NetAPI**](https://netapi.com/top-1-mln-websites/)     
+    https://netapi.com/netapi_top1mln.csv
 
 ### [govcn](https://github.com/beikejinmiao/titrace/tree/main/modules/govcn)
 以可信网站([四川省政府](https://www.sc.gov.cn/))为起始页
